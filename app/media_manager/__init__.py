@@ -1,9 +1,9 @@
 import os
 from dotenv import load_dotenv
-from insta_manager import InstaManager
-from reddit_manager import RedditManager
-from tumblr_manager import TumblrManager
-from twitter_manager import TwitterManager
+from .insta_manager import InstaManager
+from .reddit_manager import RedditManager
+from .tumblr_manager import TumblrManager
+from .twitter_manager import TwitterManager
 import requests
 import re
 from response import Response
