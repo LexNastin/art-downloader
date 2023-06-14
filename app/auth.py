@@ -2,12 +2,14 @@ from flask import Blueprint, redirect, render_template, url_for, flash, request
 from werkzeug.security import generate_password_hash, check_password_hash
 from .models import User
 from . import db
-from flask_login import login_required, login_user, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
 
 auth = Blueprint("auth", __name__)
 
 @auth.route("/login")
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
     return render_template("login.html")
 
 @auth.route("/login", methods=["POST"])
