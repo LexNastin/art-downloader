@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+  <div class="box">
+    <h1 class="title">Settings</h1>
+    <form method="POST" action="{{ url_for('main.settings_post') }}">
+      <label class="checkbox">
+        <input type="checkbox" name="allow_signups" {% if allow_signups %} checked {% endif %}>
+        Allow new signups
+      </label>
+      <button class="button is-fullwidth is-link">Save</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

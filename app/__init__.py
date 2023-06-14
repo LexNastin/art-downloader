@@ -2,7 +2,6 @@ from flask import Flask
 import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
-from app.media_manager import MediaManager
 from flask_login import LoginManager
 
 load_dotenv()
@@ -23,7 +22,7 @@ def create_app():
 
     db.init_app(app)
 
-    from .models import User
+    from .models import User, Post, Setting
 
     with app.app_context():
         db.create_all()
