@@ -14,7 +14,7 @@ def get_post(timestamp):
     return new_post
 
 def get_all_posts():
-    posts = Post.query.all()
+    posts = Post.query.order_by(Post.timestamp.desc()).all()
 
     new_posts = []
     for post in posts:
