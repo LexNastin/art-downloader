@@ -1,5 +1,40 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>add</p>
+<div class="column is-4 is-offset-4">
+  <div class="box">
+    <h1 class="title">Add Post</h1>
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+      <div class="notification is-danger">
+          {{ message }}
+      </div>
+    {% endfor %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('main.add_post') }}">
+      <div class="field">
+        <label class="label">Date/Time</label>
+        <div class="control">
+          <input class="input" type="datetime-local" name="datetime" step=1 value="{{ datetime }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Source</label>
+        <div class="control">
+          <input class="input" type="text" name="source" value="{{ source }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Tags (comma separated)</label>
+        <div class="control">
+          <input class="input" type="text" name="tags" value="{{ tags }}">
+        </div>
+      </div>
+
+      <button class="button is-fullwidth is-link">Add Post</button>
+    </form>
+  </div>
+</div>
 {% endblock %}

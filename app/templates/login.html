@@ -11,7 +11,7 @@
       </div>
     {% endfor %}
     {% endwith %}
-    <form method="POST" action="{{ url_for('auth.login_post') }}">
+    <form method="POST" action="{{ url_for('auth.login_post', next=request.args.get('next')) }}">
       <div class="field">
         <div class="control">
           <input class="input" type="text" name="username" placeholder="Username">

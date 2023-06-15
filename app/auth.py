@@ -27,6 +27,9 @@ def login_post():
         return redirect(url_for("auth.login"))
 
     login_user(user, remember=True)
+    next = request.args.get("next")
+    if next:
+        return redirect(next)
     return redirect(url_for("main.index"))
 
 @auth.route("/signup")

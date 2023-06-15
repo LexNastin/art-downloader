@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<p>index</p>
+{% for post in posts %}
+<p>{{ post.timestamp }}</p>
+<p>{{ post.source }}</p>
+<p>{{ post.tags }}</p>
+<br />
+{% endfor %}
 {% endblock %}

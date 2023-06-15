@@ -18,11 +18,10 @@ def set_setting(key, value):
     setting = Setting.query.filter_by(key=key).first()
 
     if not setting:
-        new_setting = Setting(key=key, value=value)
+        setting = Setting(key=key, value=value)
 
-        db.session.add(new_setting)
+        db.session.add(setting)
         db.session.commit()
     else:
-        new_setting = db.session.query(Setting).get(setting.id)
-        new_setting.value = value
+        setting.value = value
         db.session.commit()
