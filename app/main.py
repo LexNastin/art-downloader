@@ -8,11 +8,15 @@ from datetime import datetime as dt
 
 main = Blueprint("main", __name__)
 
+def split_into(n, arr):
+    for i in range(0, len(arr), n):
+        yield arr[i:i+n]
+
 @main.route("/")
 @login_required
 def index():
     posts = get_all_posts()
-    return render_template("index.html", posts=posts)
+    return render_template("index.html", posts=list(split_into(3, posts)))
 
 @main.route("/add")
 @login_required
@@ -28,7 +32,7 @@ def add_post():
     split_tags = [tag.strip() for tag in tags.split(",")]
 
     if not datetime:
-        flash("Date/Time can't be empty")
+        flash("Date/time can't be empty")
         return render_template("add.html", source=source, tags=tags)
     datetime = dt.fromisoformat(datetime)
     datetime = round(dt.timestamp(datetime))
