@@ -9,7 +9,19 @@
         <input type="checkbox" name="allow_signups" {% if allow_signups %} checked {% endif %}>
         Allow new signups
       </label>
-      <button class="button is-fullwidth is-link">Save</button>
+      <div class="field">
+        <label class="label">App Name</label>
+        <div class="control">
+          <input class="input" type="text" name="app_name" placeholder="App Name" value="{{ app_name }}">
+        </div>
+      </div>
+      <div class="field">
+        <div class="control">
+          <button class="button is-fullwidth is-link">
+            <strong>Save</strong>
+          </button>
+        </div>
+      </div>
     </form>
   </div>
 </div>

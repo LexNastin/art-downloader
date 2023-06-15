@@ -24,8 +24,11 @@ def settings():
 @main.route("/settings", methods=["POST"])
 @login_required
 def settings_post():
-    allow_signups = ("1" if request.form.get("allow_signups") == "on" else "0") or "1"
-    print(allow_signups)
+    allow_signups = request.form.get("allow_signups")
+    allow_signups = "1" if allow_signups == "on" else "0"
+    app_name = request.form.get("app_name") 
+    app_name = app_name or get_setting("app_name", "Art Downloader")
 
     set_setting("allow_signups", allow_signups)
+    set_setting("app_name", app_name)
     return redirect(url_for("main.settings"))

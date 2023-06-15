@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .models import User
 from . import db
 from flask_login import current_user, login_required, login_user, logout_user
+from .settings import get_setting
 
 auth = Blueprint("auth", __name__)
 
@@ -14,6 +15,8 @@ def login():
 
 @auth.route("/login", methods=["POST"])
 def login_post():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
     username = request.form.get("username")
     password = request.form.get("password")
 
@@ -28,10 +31,20 @@ def login_post():
 
 @auth.route("/signup")
 def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+    allow_signups = int(get_setting("allow_signups", "1"))
+    if not allow_signups:
+        return render_template("signup_disabled.html")
     return render_template("signup.html")
 
 @auth.route("/signup", methods=["POST"])
 def signup_post():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.index"))
+    allow_signups = int(get_setting("allow_signups", "1"))
+    if not allow_signups:
+        return redirect(url_for("auth.signup"))
     username = request.form.get("username")
     password = request.form.get("password")
 
