@@ -9,7 +9,9 @@ class Response(Enum):
 
 def get_post(timestamp):
     post = Post.query.filter_by(timestamp=timestamp).first()
-    new_post = Post(timestamp=post.timestamp, source=post.source, tags=json.json.loads(post.tags))
+    if not post:
+        return None
+    new_post = Post(timestamp=post.timestamp, source=post.source, tags=json.loads(post.tags))
 
     return new_post
 
@@ -38,6 +40,14 @@ def new_post(timestamp, source="", tags=[]):
         return {
             "response": Response.FAILED,
             "message": "A post already exists at that time"
+        }
+
+def delete_post(timestamp):
+    post = Post.query.filter_by(timestamp=timestamp).first()
+    if not post:
+        return {
+            "response": Response.FAILED,
+            "message": "Couldn't delete post. It didn't exist"
         }
 
 def update_post(timestamp, new_timestamp=None,source=None, tags=None):

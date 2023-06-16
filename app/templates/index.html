@@ -1,6 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="column is-4 is-offset-4">
+  <div class="box">
+    {% for message in messages %}
+    <div class="notification is-danger">
+        {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endwith %}
 {% for column in posts %}
 <div class="column is-8 is-offset-2">
   <div class="columns is-centered is-desktop">
@@ -9,7 +22,9 @@
       <div class="box">
         <div class="columns is-desktop is-multiline">
           <div class="column {{ '' if column|length == 1 else 'is-full' }}">
-            <img src="https://bulma.io/images/placeholders/1280x960.png">
+            <a href="/post?ts={{ post.timestamp }}">
+              <img src="{{ get_thumbnail(post.timestamp|string) }}">
+            </a>
           </div>
           <div class="column">
             <p>{{ post.timestamp }}</p>

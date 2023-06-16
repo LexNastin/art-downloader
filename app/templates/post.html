@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="column is-4 is-offset-4">
+  <div class="box">
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+      <div class="notification is-danger">
+          {{ message }}
+      </div>
+    {% endfor %}
+    {% endwith %}
+    {% for item in media %}
+      <div class="image">
+        {% if item["type"] == "image" %}
+        <img src="{{ item["location"] }}">
+        {% else %}
+        <video style="display: block" src="{{ item["location"] }}" controls>
+        {% endif %}
+      </div>
+    {% endfor %}
+    {% if post %}
+    <p>{{ post.timestamp }}</p>
+    <p>{{ post.source }}</p>
+    <p>{{ post.tags }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -37,6 +37,23 @@ def crop(image: Image.Image, des_width, des_height):
     crop = (crop_x1, crop_y1, crop_x2, crop_y2)
     return image.crop(crop)
 
+def get_fail():
+    fail_file = os.path.join(THUMBNAIL_DIR, "fail.webp")
+    if os.path.exists(fail_file):
+        return "/thumb/fail.webp"
+
+    width_3 = round(WIDTH/3)
+    # original (163, 178, 201)
+    img = Image.new("RGBA", (WIDTH, HEIGHT))
+    red = Image.new("RGBA", (width_3 + 1, HEIGHT), (255, 0, 0))
+    green = Image.new("RGBA", (width_3 + 1, HEIGHT), (0, 255, 0))
+    blue = Image.new("RGBA", (width_3 + 1, HEIGHT), (0, 0, 255))
+    img.paste(red, (0, 0))
+    img.paste(green, (width_3, 0))
+    img.paste(blue, (width_3*2, 0))
+    img.save(fail_file)
+    return "/thumb/fail.webp"
+
 #16776WIDTH58
 def get_thumbnail(timestamp):
     thumbnail_file = os.path.join(THUMBNAIL_DIR, f"{timestamp}.webp")
@@ -44,9 +61,11 @@ def get_thumbnail(timestamp):
         return f"/thumb/{timestamp}.webp"
 
     post_media_dir = os.path.join(MEDIA_DIR, timestamp)
+    if not os.path.exists(post_media_dir):
+        return get_fail()
     media_files = os.listdir(post_media_dir)
     if not media_files:
-        return "todo: fix thumbnails empty media"
+        return get_fail()
 
     if len(media_files) > 4:
         media_files = media_files[:4]
@@ -58,9 +77,10 @@ def get_thumbnail(timestamp):
         if mimetype == "video":
             video = cv2.VideoCapture(os.path.join(post_media_dir, media_file))
             frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
-            middle = round(frames/2)
+            middle = round(frames/2) - 1
             video.set(cv2.CAP_PROP_POS_FRAMES, middle)
             _, image = video.read()
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             image = Image.fromarray(image)
             images.append(image)
             video.release()
@@ -127,3 +147,4 @@ def get_thumbnail(timestamp):
 
     thumbnail.save(thumbnail_file)
     image.close()
+    return f"/thumb/{timestamp}.webp"

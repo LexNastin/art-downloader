@@ -11,6 +11,8 @@ auth = Blueprint("auth", __name__)
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
+    if not User.query.all():
+        return redirect(url_for("auth.signup"))
     return render_template("login.html")
 
 @auth.route("/login", methods=["POST"])
@@ -57,8 +59,10 @@ def signup_post():
         flash("Username taken!")
         return redirect(url_for("auth.signup"))
 
+    admin = False if User.query.all() else True
+
     hash = generate_password_hash(password)
-    new_user = User(username=username, password=hash)
+    new_user = User(username=username, password=hash, admin=admin)
 
     db.session.add(new_user)
     db.session.commit()

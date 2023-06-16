@@ -46,7 +46,7 @@
 
       <div id="navbar-menu" class="navbar-menu">
         <div class="navbar-start">
-          {% if current_user.is_authenticated %}
+          {% if current_user.is_authenticated and current_user.admin %}
           <a class="navbar-item" href="{{ url_for('main.add') }}"> Add Art </a>
           {% endif %}
         </div>
