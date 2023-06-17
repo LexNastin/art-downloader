@@ -88,6 +88,8 @@ def add_post():
 
     split_tags = [tag.strip() for tag in tags.split(",")]
     split_tags.sort()
+    if len(split_tags) == 1 and split_tags[0] == "":
+        split_tags = []
 
     temp_post_dir = safe_join(TEMP_DIR, session_id)
     temp_post_dir_exists = os.path.exists(temp_post_dir)
