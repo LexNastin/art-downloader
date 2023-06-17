@@ -20,7 +20,7 @@ def crop(image: Image.Image, des_width, des_height):
         new_height = round(width/des_width*des_height)
 
         crop_x1 = 0
-        crop_x2 = width - 1
+        crop_x2 = width
         crop_y1 = height//2 - new_height//2
         crop_y2 = height//2 + new_height//2 - 1
     else:
@@ -30,7 +30,7 @@ def crop(image: Image.Image, des_width, des_height):
         crop_x1 = width//2 - new_width//2 - 1
         crop_x2 = width//2 + new_width//2
         crop_y1 = 0
-        crop_y2 = height - 1
+        crop_y2 = height
     crop = (crop_x1, crop_y1, crop_x2, crop_y2)
     return image.crop(crop)
 
@@ -90,6 +90,7 @@ def get_thumbnail(timestamp):
     if len(images) == 1:
         img = images[0]
         img = crop(img, WIDTH, HEIGHT)
+        img = img.resize((WIDTH, HEIGHT))
 
         img.thumbnail((WIDTH, HEIGHT))
         thumbnail.paste(img, (0, 0))
