@@ -1,12 +1,9 @@
-# from . import DATA_DIR, MEDIA_DIR
+from . import DATA_DIR, MEDIA_DIR
 import os
 import mimetypes
 import cv2
 from PIL import Image
 
-# remove first 2
-DATA_DIR = "/home/lex/tohart-viewer/data"
-MEDIA_DIR = os.path.join(DATA_DIR, "media")
 THUMBNAIL_DIR = os.path.join(DATA_DIR, "thumbnails")
 os.makedirs(THUMBNAIL_DIR, exist_ok=True)
 

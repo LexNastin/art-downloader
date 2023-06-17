@@ -1,7 +1,54 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="column is-4 is-offset-4">
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Functions to open and close a modal
+    function openModal($el) {
+      $el.classList.add('is-active');
+    }
+
+    function closeModal($el) {
+      $el.classList.remove('is-active');
+    }
+
+    function closeAllModals() {
+      (document.querySelectorAll('.modal') || []).forEach(($modal) => {
+        closeModal($modal);
+      });
+    }
+
+    // Add a click event on buttons to open a specific modal
+    (document.querySelectorAll('.modal-trigger') || []).forEach(($trigger) => {
+      const modal = $trigger.dataset.target;
+      const $target = document.getElementById(modal);
+
+      $trigger.addEventListener('click', () => {
+        openModal($target);
+      });
+    });
+
+    // Add a click event on various child elements to close the parent modal
+    (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
+      const $target = $close.closest('.modal');
+
+      $close.addEventListener('click', () => {
+        closeModal($target);
+      });
+    });
+
+    // Add a keyboard event to close all modals
+    document.addEventListener('keydown', (event) => {
+      const e = event || window.event;
+
+      if (e.keyCode === 27) { // Escape key
+        closeAllModals();
+      }
+    });
+  });
+</script>
+
+<div class="column is-6 is-offset-3">
   <div class="box">
     {% with messages = get_flashed_messages() %}
     {% for message in messages %}
@@ -20,10 +67,60 @@
       </div>
     {% endfor %}
     {% if post %}
-    <p>{{ post.timestamp }}</p>
-    <p>{{ post.source }}</p>
-    <p>{{ post.tags }}</p>
+      <br>
+      
+      <div>
+      {% for tag in post.tags %}
+        <span class="tag is-info">{{ tag }}</span>
+      {% endfor %}
+      </div>
+
+      {% if post.source %}
+        <p><a href="{{ post.source }}">Source</a></p>
+      {% else %}
+        <p>No source</p>
+      {% endif %}
+
+      <p>{{ strftime(post.timestamp) }}</p>
+
+      <br>
+      <div class="columns is-mobile">
+        <div class="column">
+          <a href="/edit?ts={{ post.timestamp }}" class="button is-link is-fullwidth">
+            <span class="icon">
+              <i class="fas fa-pencil"></i>
+            </span>
+            <span>Edit</span>
+          </a>
+        </div>
+        <div class="column">
+          <button class="button is-danger is-fullwidth modal-trigger" data-target="delete-modal">
+            <span class="icon">
+              <i class="fas fa-trash"></i>
+            </span>
+            <span>Delete</span>
+          </button>
+        </div>
+      </div>
     {% endif %}
+  </div>
+</div>
+
+<div id="delete-modal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Are you sure?</p>
+    </header>
+
+    <section class="modal-card-body">
+      <p>You're about delete this post!</p>
+    </section>
+
+    <div class="modal-card-foot">
+      <a href="/delete?ts={{ post.timestamp }}" class="button">Yes</a>
+      <button class="button is-info">No</button>
+    </div>
   </div>
 </div>
 {% endblock %}

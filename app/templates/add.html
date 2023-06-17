@@ -1,6 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
+<script defer>
+  document.addEventListener("DOMContentLoaded", () => {
+    let datetime = document.getElementById("datetime")
+    let now = new Date()
+    let y = now.getFullYear().toString().padStart(4, "0")
+    let m = (now.getMonth()+1).toString().padStart(2, "0")
+    let d = now.getDate().toString().padStart(2, "0")
+    let H = now.getHours().toString().padStart(2, "0")
+    let M = now.getMinutes().toString().padStart(2, "0")
+    let S = now.getSeconds().toString().padStart(2, "0")
+    let value = `${y}-${m}-${d}T${H}:${M}:${S}`
+    datetime.value = value
+
+    let files = document.getElementById("files")
+    files.addEventListener("change", event => {
+      let files = [...event.target.files]
+      let data = new FormData()
+      files.forEach((file, index) => {
+        data.append(`file-${index}`, file)
+      })
+      fetch("/upload?id={{ session_id }}", {
+        method: "POST",
+        body: data
+      }).then(async response => {
+        response = await response.json()
+        let added_files = response["files"]
+        added_files.forEach(file => {
+          let location = file["location"]
+          let type = file["type"]
+
+          let files_div = document.getElementById("files-preview")
+
+          let new_container = document.createElement("div")
+          new_container.classList.add("image")
+          if (type == "image") {
+            let new_img = document.createElement("img")
+            new_img.src = location
+            new_container.appendChild(new_img)
+          } else {
+            let new_video = document.createElement("video")
+            new_video.src = location
+            new_video.style.display = "block"
+            new_video.controls = true
+            new_container.appendChild(new_video)
+          }
+          files_div.appendChild(new_container)
+        })
+      })
+    })
+  })
+</script>
+
 <div class="column is-4 is-offset-4">
   <div class="box">
     <h1 class="title">Add Post</h1>
@@ -15,7 +67,7 @@
       <div class="field">
         <label class="label">Date/Time</label>
         <div class="control">
-          <input class="input" type="datetime-local" name="datetime" step=1 value="{{ datetime }}">
+          <input id="datetime" class="input" type="datetime-local" name="datetime" step=1 value="{{ datetime }}">
         </div>
       </div>
 
@@ -33,6 +85,39 @@
         </div>
       </div>
 
+      <div class="field">
+        <div class="control">
+          <div class="file">
+            <label class="file-label">
+              <div class="file-cta">
+                <input id="files" class="file-input" type="file" multiple>
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">
+                  Choose image(s)
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="files-preview">
+        {% if files %}
+        {% for file in files %}
+          <div class="image">
+            {% if file["type"] == "image" %}
+            <img src="{{ file["location"] }}">
+            {% else %}
+            <video style="display:block" src="{{ file["location"] }}" controls>
+            {% endif %}
+          </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+
+      <input type="text" name="session_id" value="{{ session_id }}" hidden>
       <button class="button is-fullwidth is-link">Add Post</button>
     </form>
   </div>

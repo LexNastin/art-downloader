@@ -1,38 +1,52 @@
 from functools import wraps
 from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
+from werkzeug.security import safe_join
 from flask_login import current_user, login_required
 from .thumbnails import get_thumbnail
 from .models import Post
 from .posts import get_all_posts, get_post, new_post, Response
 # from . import media_manager
-from . import DATA_DIR, MEDIA_DIR
+from . import DATA_DIR, MEDIA_DIR, TEMP_DIR
 from .settings import get_setting, set_setting
 from datetime import datetime as dt
 import os
 import mimetypes
+import shutil
 
 main = Blueprint("main", __name__)
 
+# get random id for uploads
+def get_random():
+    random = os.urandom(5).hex()
+    return random
+
+# function to split array into array of arrays of size n
 def split_into(n, arr):
     for i in range(0, len(arr), n):
         yield arr[i:i+n]
 
+# decorator to limit access to admins
 def admin_only(func):
     @wraps(func)
-    def wrapper():
+    def wrapper(*args, **kwargs):
         if current_user.is_authenticated and current_user.admin:
-            return func()
+            return func(*args, **kwargs)
         else:
             flash("You have to be an admin to do that!")
             return redirect(url_for("main.index"))
     return wrapper
 
+def strftime(timestamp):
+    return dt.fromtimestamp(timestamp).strftime("%d %b %Y - %H:%M:%S")
+
+# main website ui
 @main.route("/")
 @login_required
 def index():
     posts = get_all_posts()
-    return render_template("index.html", posts=list(split_into(3, posts)), get_thumbnail=get_thumbnail)
+    return render_template("index.html", posts=list(split_into(3, posts)), get_thumbnail=get_thumbnail, strftime=strftime)
 
+# post viewing path
 @main.route("/post")
 @login_required
 def post():
@@ -52,13 +66,14 @@ def post():
             })
     if not media and post:
         flash("Media not found")
-    return render_template("post.html", post=post, media=media)
+    return render_template("post.html", post=post, media=media, strftime=strftime)
 
+# post adding paths
 @main.route("/add")
 @login_required
 @admin_only
 def add():
-    return render_template("add.html")
+    return render_template("add.html", session_id=get_random())
 
 @main.route("/add", methods=["POST"])
 @login_required
@@ -67,22 +82,81 @@ def add_post():
     datetime = request.form.get("datetime")
     source = request.form.get("source") or ""
     tags = request.form.get("tags") or ""
+    session_id = request.form.get("session_id") or get_random()
+
     split_tags = [tag.strip() for tag in tags.split(",")]
+    split_tags.sort()
+
+    temp_post_dir = safe_join(TEMP_DIR, session_id)
+    files = []
+    if os.path.exists(temp_post_dir):
+        for file in os.listdir(safe_join(TEMP_DIR, session_id)):
+            files.append({
+                "location": f"/temp/{session_id}/{file}",
+                "type": mimetypes.guess_type(file)[0].split("/")[0],
+                "file": file
+            })
 
     if not datetime:
         flash("Date/time can't be empty")
-        return render_template("add.html", source=source, tags=tags)
+        print(session_id)
+        return render_template("add.html", source=source, tags=tags, session_id=session_id, files=files)
     datetime = dt.fromisoformat(datetime)
     datetime = round(dt.timestamp(datetime))
 
-    split_tags = [tag.strip() for tag in tags.split(",")]
+    new_post_dir = safe_join(MEDIA_DIR, str(datetime))
+    if files:
+        if os.path.exists(new_post_dir):
+            os.rmdir(new_post_dir)
+        os.makedirs(new_post_dir, exist_ok=True)
+        for file in files:
+            file = file["file"]
+            old_file_path = safe_join(temp_post_dir, file)
+            new_file_path = safe_join(new_post_dir, file)
+            shutil.move(old_file_path, new_file_path)
     response = new_post(datetime, source=source, tags=split_tags)
     if response["response"] == Response.FAILED:
         flash(response["message"])
-        return render_template("add.html", datetime=datetime, source=source, tags=tags)
+        return render_template("add.html", datetime=datetime, source=source, tags=tags, session_id=session_id, files=files)
 
     return redirect(url_for("main.index"))
 
+# media upload/generation paths
+@main.route("/upload", methods=["POST"])
+@login_required
+@admin_only
+def upload():
+    session_id = request.args.get("id")
+    files = list(request.files.values())
+    if not session_id:
+        return "No session id provided", 400
+    if not files:
+        return {"files": []}, 400
+    upload_path = safe_join(TEMP_DIR, session_id)
+    print(upload_path)
+    os.makedirs(upload_path, exist_ok=True)
+    start_index = 0
+    existing_files = os.listdir(upload_path)
+    if existing_files:
+        existing_files.sort(key=lambda x: int( x.split(".")[0] ))
+        start_index = int( existing_files[-1].split(".")[0] ) + 1
+    uploaded_files = []
+    for index, file in enumerate(files):
+        index += start_index
+        name = file.filename or "0.png"
+        ext = name.split(".")[-1]
+        new_filename = f"{index}.{ext}"
+        uploaded_files.append({
+            "location": f"/temp/{session_id}/{new_filename}",
+            "type": mimetypes.guess_type(new_filename)[0].split("/")[0]
+        })
+        new_path = safe_join(upload_path, new_filename)
+        file.save(new_path)
+    return {
+        "files": uploaded_files
+    }
+
+# website setting paths
 @main.route("/settings")
 @login_required
 def settings():
@@ -102,6 +176,7 @@ def settings_post():
     set_setting("app_name", app_name)
     return redirect(url_for("main.settings"))
 
+# preview paths
 @main.route("/media/<path:path>")
 @login_required
 def serve_media(path):
@@ -112,3 +187,9 @@ def serve_media(path):
 def serve_thumbnail(path):
     thumb_dir = os.path.join(DATA_DIR, "thumbnails")
     return send_from_directory(thumb_dir, path)
+
+@main.route("/temp/<path:path>")
+@login_required
+@admin_only
+def serve_temp(path):
+    return send_from_directory(TEMP_DIR, path)

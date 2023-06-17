@@ -6,10 +6,13 @@ from flask_login import LoginManager
 
 load_dotenv()
 SCRIPT_DIR = os.getcwd()
+
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 MEDIA_DIR = os.path.join(DATA_DIR, "media")
+TEMP_DIR = os.path.join("/tmp", "art-downloader")
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(MEDIA_DIR, exist_ok=True)
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 db = SQLAlchemy()
 # media_manager = MediaManager()
