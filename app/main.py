@@ -22,7 +22,9 @@ def get_random():
 
 # function to split array into array of arrays of size n
 def split_into(n, arr):
-    for i in range(0, len(arr), n):
+    if len(arr) % 3:
+        yield arr[:len(arr) % 3]
+    for i in range(len(arr) % 3, len(arr), n):
         yield arr[i:i+n]
 
 # decorator to limit access to admins
@@ -110,10 +112,12 @@ def add_post():
         if os.path.exists(new_post_dir):
             shutil.rmtree(new_post_dir, ignore_errors=True)
         os.makedirs(new_post_dir, exist_ok=True)
-        for file in files:
-            file = file["file"]
-            old_file_path = safe_join(temp_post_dir, file)
-            new_file_path = safe_join(new_post_dir, file)
+        for index, file in enumerate(files):
+            old_file = file["file"]
+            old_file_ext = old_file.split(".")[-1]
+            new_file = f"{index}.{old_file_ext}"
+            old_file_path = safe_join(temp_post_dir, old_file)
+            new_file_path = safe_join(new_post_dir, new_file)
             shutil.move(old_file_path, new_file_path)
     response = new_post(datetime, source=source, tags=split_tags)
     if response["response"] == Response.FAILED:

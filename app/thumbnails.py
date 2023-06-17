@@ -9,8 +9,8 @@ os.makedirs(THUMBNAIL_DIR, exist_ok=True)
 
 WIDTH = 960
 HEIGHT = 540
-HWIDTH = 480
-HHEIGHT = 270
+HWIDTH = WIDTH//2
+HHEIGHT = HEIGHT//2
 
 def crop(image: Image.Image, des_width, des_height):
     width = image.width
@@ -61,6 +61,8 @@ def gen_thumbnail(timestamp):
     if not media_files:
         return get_fail()
 
+    media_files.sort(key=lambda x: int(x.split(".")[0]))
+
     if len(media_files) > 4:
         media_files = media_files[:4]
 
@@ -104,20 +106,20 @@ def gen_thumbnail(timestamp):
         thumbnail.paste(img2, (HWIDTH, 0))
     if len(images) == 3:
         img1 = images[0]
-        img1 = crop(img1, HWIDTH, HHEIGHT)
-        img1 = img1.resize((HWIDTH, HHEIGHT))
+        img1 = crop(img1, HWIDTH, HEIGHT)
+        img1 = img1.resize((HWIDTH, HEIGHT))
 
         img2 = images[1]
         img2 = crop(img2, HWIDTH, HHEIGHT)
         img2 = img2.resize((HWIDTH, HHEIGHT))
 
         img3 = images[2]
-        img3 = crop(img3, WIDTH, HHEIGHT)
-        img3 = img3.resize((WIDTH, HHEIGHT))
+        img3 = crop(img3, HWIDTH, HHEIGHT)
+        img3 = img3.resize((HWIDTH, HHEIGHT))
 
         thumbnail.paste(img1, (0, 0))
         thumbnail.paste(img2, (HWIDTH, 0))
-        thumbnail.paste(img3, (0, HHEIGHT))
+        thumbnail.paste(img3, (HWIDTH, HHEIGHT))
     if len(images) == 4:
         img1 = images[0]
         img1 = crop(img1, HWIDTH, HHEIGHT)

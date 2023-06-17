@@ -20,7 +20,7 @@
     let M = now.getMinutes().toString().padStart(2, "0")
     let S = now.getSeconds().toString().padStart(2, "0")
     let value = `${y}-${m}-${d}T${H}:${M}:${S}`
-    // if (!datetime.value) datetime.value = value
+    if (!datetime.value) datetime.value = value
 
     const session_id = "{{ session_id }}"
     let files = document.getElementById("files")
