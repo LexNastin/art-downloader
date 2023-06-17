@@ -2,7 +2,7 @@ from functools import wraps
 from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.security import safe_join
 from flask_login import current_user, login_required
-from .thumbnails import get_thumbnail
+from .thumbnails import gen_thumbnail, get_thumbnail
 from .models import Post
 from .posts import get_all_posts, get_post, new_post, Response
 # from . import media_manager
@@ -96,6 +96,7 @@ def add_post():
                 "type": mimetypes.guess_type(file)[0].split("/")[0],
                 "file": file
             })
+    files.sort(key=lambda x: int( x["file"].split(".")[0] ))
 
     if not datetime:
         flash("Date/time can't be empty")
@@ -107,7 +108,7 @@ def add_post():
     new_post_dir = safe_join(MEDIA_DIR, str(datetime))
     if files:
         if os.path.exists(new_post_dir):
-            os.rmdir(new_post_dir)
+            shutil.rmtree(new_post_dir, ignore_errors=True)
         os.makedirs(new_post_dir, exist_ok=True)
         for file in files:
             file = file["file"]
@@ -118,6 +119,7 @@ def add_post():
     if response["response"] == Response.FAILED:
         flash(response["message"])
         return render_template("add.html", datetime=datetime, source=source, tags=tags, session_id=session_id, files=files)
+    gen_thumbnail(str(datetime))
 
     return redirect(url_for("main.index"))
 
@@ -133,7 +135,6 @@ def upload():
     if not files:
         return {"files": []}, 400
     upload_path = safe_join(TEMP_DIR, session_id)
-    print(upload_path)
     os.makedirs(upload_path, exist_ok=True)
     start_index = 0
     existing_files = os.listdir(upload_path)
@@ -148,13 +149,89 @@ def upload():
         new_filename = f"{index}.{ext}"
         uploaded_files.append({
             "location": f"/temp/{session_id}/{new_filename}",
-            "type": mimetypes.guess_type(new_filename)[0].split("/")[0]
+            "type": mimetypes.guess_type(new_filename)[0].split("/")[0],
+            "file": new_filename
         })
         new_path = safe_join(upload_path, new_filename)
         file.save(new_path)
+    uploaded_files.sort(key=lambda x: int( x["file"].split(".")[0] ))
     return {
         "files": uploaded_files
     }
+
+# media manipulation methods
+@main.route("/media_up", methods=["POST"])
+@login_required
+@admin_only
+def media_up():
+    session_id = request.args.get("id")
+    if not session_id:
+        return "No session id provided", 400
+    move_file = request.get_data().decode("UTF-8")
+    temp_post_dir = safe_join(TEMP_DIR, session_id)
+    files = []
+    if os.path.exists(temp_post_dir):
+        files = os.listdir(safe_join(TEMP_DIR, session_id))
+    files.sort(key=lambda x: int( x.split(".")[0] ))
+    if move_file in files:
+        new_index = files.index(move_file) - 1
+        random = get_random()
+        if new_index >= 0:
+            # file 1 is the requested file
+            # file 2 is the other file already in place
+            f1_num = move_file.split(".")[0]
+            f2_num = files[new_index].split(".")[0]
+            f1_ext = move_file.split(".")[1]
+            f2_ext = files[new_index].split(".")[1]
+
+            os.rename(safe_join(temp_post_dir, move_file), safe_join(temp_post_dir, f"{random}.{f1_ext}"))
+            os.rename(safe_join(temp_post_dir, files[new_index]), safe_join(temp_post_dir, f"{f1_num}.{f2_ext}"))
+            os.rename(safe_join(temp_post_dir, f"{random}.{f1_ext}"), safe_join(temp_post_dir, f"{f2_num}.{f1_ext}"))
+    return "OK"
+
+@main.route("/media_down", methods=["POST"])
+@login_required
+@admin_only
+def media_down():
+    session_id = request.args.get("id")
+    if not session_id:
+        return "No session id provided", 400
+    move_file = request.get_data().decode("UTF-8")
+    temp_post_dir = safe_join(TEMP_DIR, session_id)
+    files = []
+    if os.path.exists(temp_post_dir):
+        files = os.listdir(safe_join(TEMP_DIR, session_id))
+    files.sort(key=lambda x: int( x.split(".")[0] ))
+    if move_file in files:
+        new_index = files.index(move_file) + 1
+        random = get_random()
+        if new_index < len(files):
+            # file 1 is the requested file
+            # file 2 is the other file already in place
+            f1_num = move_file.split(".")[0]
+            f2_num = files[new_index].split(".")[0]
+            f1_ext = move_file.split(".")[1]
+            f2_ext = files[new_index].split(".")[1]
+
+            os.rename(safe_join(temp_post_dir, move_file), safe_join(temp_post_dir, f"{random}.{f1_ext}"))
+            os.rename(safe_join(temp_post_dir, files[new_index]), safe_join(temp_post_dir, f"{f1_num}.{f2_ext}"))
+            os.rename(safe_join(temp_post_dir, f"{random}.{f1_ext}"), safe_join(temp_post_dir, f"{f2_num}.{f1_ext}"))
+    return "OK"
+
+@main.route("/media_delete", methods=["POST"])
+@login_required
+@admin_only
+def media_delete():
+    session_id = request.args.get("id")
+    if not session_id:
+        return "No session id provided", 400
+    delete_file = request.get_data().decode("UTF-8")
+    temp_post_dir = safe_join(TEMP_DIR, session_id)
+    file_path = safe_join(temp_post_dir, delete_file)
+
+    os.remove(file_path)
+
+    return delete_file
 
 # website setting paths
 @main.route("/settings")

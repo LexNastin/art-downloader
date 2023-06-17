@@ -1,7 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
-<script defer>
+<style>
+  .control-buttons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+</style>
+
+<script>
   document.addEventListener("DOMContentLoaded", () => {
     let datetime = document.getElementById("datetime")
     let now = new Date()
@@ -12,43 +20,167 @@
     let M = now.getMinutes().toString().padStart(2, "0")
     let S = now.getSeconds().toString().padStart(2, "0")
     let value = `${y}-${m}-${d}T${H}:${M}:${S}`
-    datetime.value = value
+    // if (!datetime.value) datetime.value = value
 
+    const session_id = "{{ session_id }}"
     let files = document.getElementById("files")
+
+    function create_control_buttons(file_name) {
+      let container = document.createElement("div")
+      container.classList.add("control-buttons", "buttons", "are-small")
+
+      let up_button = document.createElement("button")
+      let down_button = document.createElement("button")
+      let delete_button = document.createElement("button")
+
+      up_button.classList.add("button", "is-info", "is-rounded")
+      down_button.classList.add("button", "is-info", "is-rounded")
+      delete_button.classList.add("button", "is-danger", "is-rounded")
+
+      up_button.addEventListener("click", handle_up)
+      up_button.type = "button"
+      down_button.addEventListener("click", handle_down)
+      down_button.type = "button"
+      delete_button.addEventListener("click", handle_delete)
+      delete_button.type = "button"
+      
+      let arrow_up = document.createElement("i")
+      let arrow_down = document.createElement("i")
+      let trash = document.createElement("i")
+
+      arrow_up.classList.add("fas", "fa-arrow-up")
+      arrow_down.classList.add("fas", "fa-arrow-down")
+      trash.classList.add("fas", "fa-trash")
+      
+      up_button.appendChild(arrow_up)
+      down_button.appendChild(arrow_down)
+      delete_button.appendChild(trash)
+
+      container.appendChild(up_button)
+      container.appendChild(down_button)
+      container.appendChild(delete_button)
+
+      return container
+    }
+
+    function remove_preview(file_name) {
+      let elements = document.querySelectorAll(`[data-file="${file_name}"]`)
+      elements.forEach(item => {
+        item.remove()
+      })
+    }
+
+    function handle_up(event) {
+      let curr = event.currentTarget.parentElement.parentElement
+      let prev = curr.previousElementSibling
+      fetch(`/media_up?id=${session_id}`, {
+        method: "POST",
+        body: curr.dataset["file"]
+      }).then(() => {
+        if (prev) {
+          prev.before(curr)
+
+          let f1_num = curr.dataset["file"].split(".")[0]
+          let f2_num = prev.dataset["file"].split(".")[0]
+          let f1_ext = curr.dataset["file"].split(".")[1]
+          let f2_ext = prev.dataset["file"].split(".")[1]
+
+          curr.dataset["file"] = `${f2_num}.${f1_ext}`
+          prev.dataset["file"] = `${f1_num}.${f2_ext}`
+        }
+      })
+    }
+
+    function handle_down(event) {
+      let curr = event.currentTarget.parentElement.parentElement
+      let next = curr.nextElementSibling
+      fetch(`/media_down?id=${session_id}`, {
+        method: "POST",
+        body: curr.dataset["file"]
+      }).then(() => {
+        if (next) {
+          next.after(curr)
+
+          let f1_num = curr.dataset["file"].split(".")[0]
+          let f2_num = next.dataset["file"].split(".")[0]
+          let f1_ext = curr.dataset["file"].split(".")[1]
+          let f2_ext = next.dataset["file"].split(".")[1]
+
+          curr.dataset["file"] = `${f2_num}.${f1_ext}`
+          next.dataset["file"] = `${f1_num}.${f2_ext}`
+        }
+      })
+    }
+
+    function handle_delete(event) {
+      fetch(`/media_delete?id=${session_id}`, {
+        method: "POST",
+        body: event.currentTarget.parentElement.parentElement.dataset["file"]
+      }).then(async response => {
+        let file_name = await response.text()
+        remove_preview(file_name)
+      })
+    }
+
+    async function preview_files(response) {
+      response = await response.json()
+      let added_files = response["files"]
+      let files_div = document.getElementById("files-preview")
+
+      added_files.forEach(file => {
+        let location = file["location"]
+        let type = file["type"]
+        let file_name = file["file"]
+
+        let new_container = document.createElement("div")
+        new_container.classList.add("image")
+        new_container.dataset["file"] = file_name
+        new_container.appendChild(create_control_buttons(file_name))
+        if (type == "image") {
+          let new_img = document.createElement("img")
+          new_img.src = location
+          new_container.appendChild(new_img)
+        } else {
+          let new_video = document.createElement("video")
+          new_video.src = location
+          new_video.style.display = "block"
+          new_video.controls = true
+          new_container.appendChild(new_video)
+        }
+        files_div.appendChild(new_container)
+      })
+    }
+
     files.addEventListener("change", event => {
       let files = [...event.target.files]
       let data = new FormData()
       files.forEach((file, index) => {
         data.append(`file-${index}`, file)
       })
-      fetch("/upload?id={{ session_id }}", {
+      fetch(`/upload?id=${session_id}`, {
         method: "POST",
         body: data
-      }).then(async response => {
-        response = await response.json()
-        let added_files = response["files"]
-        added_files.forEach(file => {
-          let location = file["location"]
-          let type = file["type"]
+      }).then(preview_files)
+      event.target.value = ""
+    })
+    
+    let up_buttons = [...document.getElementsByClassName("up-button")]
+    let down_buttons = [...document.getElementsByClassName("down-button")]
+    let delete_buttons = [...document.getElementsByClassName("delete-button")]
 
-          let files_div = document.getElementById("files-preview")
+    up_buttons.forEach(elem => {
+      elem.classList.remove("up-button")
+      elem.addEventListener("click", handle_up)
+    })
 
-          let new_container = document.createElement("div")
-          new_container.classList.add("image")
-          if (type == "image") {
-            let new_img = document.createElement("img")
-            new_img.src = location
-            new_container.appendChild(new_img)
-          } else {
-            let new_video = document.createElement("video")
-            new_video.src = location
-            new_video.style.display = "block"
-            new_video.controls = true
-            new_container.appendChild(new_video)
-          }
-          files_div.appendChild(new_container)
-        })
-      })
+    down_buttons.forEach(elem => {
+      elem.classList.remove("down-button")
+      elem.addEventListener("click", handle_down)
+    })
+
+    delete_buttons.forEach(elem => {
+      elem.classList.remove("delete-button")
+      elem.addEventListener("click", handle_delete)
     })
   })
 </script>
@@ -103,14 +235,25 @@
         </div>
       </div>
 
-      <div id="files-preview">
+      <div id="files-preview" class="field">
         {% if files %}
         {% for file in files %}
-          <div class="image">
+          <div class="image" data-file="{{ file["file"] }}">
+            <div class="control-buttons buttons are-small">
+              <button type="button" class="button is-info is-rounded up-button">
+                <i class="fas fa-arrow-up"></i>
+              </button><!--
+           --><button type="button" class="button is-info is-rounded down-button">
+                <i class="fas fa-arrow-down"></i>
+              </button><!--
+           --><button type="button" class="button is-danger is-rounded delete-button">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
             {% if file["type"] == "image" %}
             <img src="{{ file["location"] }}">
             {% else %}
-            <video style="display:block" src="{{ file["location"] }}" controls>
+            <video style="display: block" src="{{ file["location"] }}" controls>
             {% endif %}
           </div>
         {% endfor %}

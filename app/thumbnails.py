@@ -52,11 +52,8 @@ def get_fail():
     return "/thumb/fail.webp"
 
 #16776WIDTH58
-def get_thumbnail(timestamp):
+def gen_thumbnail(timestamp):
     thumbnail_file = os.path.join(THUMBNAIL_DIR, f"{timestamp}.webp")
-    if os.path.exists(thumbnail_file):
-        return f"/thumb/{timestamp}.webp"
-
     post_media_dir = os.path.join(MEDIA_DIR, timestamp)
     if not os.path.exists(post_media_dir):
         return get_fail()
@@ -146,3 +143,10 @@ def get_thumbnail(timestamp):
     thumbnail.save(thumbnail_file)
     image.close()
     return f"/thumb/{timestamp}.webp"
+
+def get_thumbnail(timestamp):
+    thumbnail_file = os.path.join(THUMBNAIL_DIR, f"{timestamp}.webp")
+    if os.path.exists(thumbnail_file):
+        return f"/thumb/{timestamp}.webp"
+
+    return gen_thumbnail(timestamp)

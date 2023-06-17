@@ -25,6 +25,7 @@ def create_app():
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY") or os.urandom(32).hex()
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(DATA_DIR, "data.db")
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 
     # initialize db with app context
     db.init_app(app)
