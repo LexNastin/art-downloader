@@ -90,8 +90,9 @@ def add_post():
     split_tags.sort()
 
     temp_post_dir = safe_join(TEMP_DIR, session_id)
+    temp_post_dir_exists = os.path.exists(temp_post_dir)
     files = []
-    if os.path.exists(temp_post_dir):
+    if temp_post_dir_exists:
         for file in os.listdir(safe_join(TEMP_DIR, session_id)):
             files.append({
                 "location": f"/temp/{session_id}/{file}",
@@ -119,6 +120,8 @@ def add_post():
             old_file_path = safe_join(temp_post_dir, old_file)
             new_file_path = safe_join(new_post_dir, new_file)
             shutil.move(old_file_path, new_file_path)
+    if temp_post_dir_exists:
+        os.rmdir(temp_post_dir)
     response = new_post(datetime, source=source, tags=split_tags)
     if response["response"] == Response.FAILED:
         flash(response["message"])
