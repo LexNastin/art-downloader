@@ -82,7 +82,7 @@ def get_thumbnail(timestamp):
             images.append(image)
             video.release()
         if mimetype == "image":
-            image = Image.open(media_file)
+            image = Image.open(os.path.join(post_media_dir, media_file))
             images.append(image)
 
     thumbnail = Image.new("RGBA", (WIDTH, HEIGHT))
