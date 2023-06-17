@@ -2,9 +2,9 @@ from functools import wraps
 from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.security import safe_join
 from flask_login import current_user, login_required
-from .thumbnails import gen_thumbnail, get_thumbnail
+from .thumbnails import THUMBNAIL_DIR, gen_thumbnail, get_thumbnail
 from .models import Post
-from .posts import get_all_posts, get_post, new_post, Response
+from .posts import delete_post, get_all_posts, get_post, new_post, Response
 # from . import media_manager
 from . import DATA_DIR, MEDIA_DIR, TEMP_DIR
 from .settings import get_setting, set_setting
@@ -130,6 +130,24 @@ def add_post():
         return render_template("add.html", datetime=datetime, source=source, tags=tags, session_id=session_id, files=files)
     gen_thumbnail(str(datetime))
 
+    return redirect(url_for("main.index"))
+
+# post manipulation paths
+@main.route("/delete")
+@login_required
+@admin_only
+def delete():
+    post_ts = request.args.get("ts")
+    if post_ts.isdigit():
+        post_ts = int(post_ts)
+    post = get_post(post_ts)
+    if os.path.exists(safe_join(MEDIA_DIR, str(post_ts))):
+        shutil.rmtree(safe_join(MEDIA_DIR, str(post_ts)))
+    if os.path.exists(safe_join(THUMBNAIL_DIR, f"{post_ts}.webp")):
+        os.remove(safe_join(THUMBNAIL_DIR, f"{post_ts}.webp"))
+    result = delete_post(post_ts)
+    if result["response"] == Response.FAILED:
+        flash(result["message"])
     return redirect(url_for("main.index"))
 
 # media upload/generation paths

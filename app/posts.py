@@ -49,6 +49,11 @@ def delete_post(timestamp):
             "response": Response.FAILED,
             "message": "Couldn't delete post. It didn't exist"
         }
+    db.session.delete(post)
+    db.session.commit()
+    return {
+        "response": Response.SUCCESS
+    }
 
 def update_post(timestamp, new_timestamp=None,source=None, tags=None):
     post = Post.query.filter_by(timestamp=timestamp).first()
