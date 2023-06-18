@@ -24,6 +24,7 @@
 
     const session_id = "{{ session_id }}"
     let files = document.getElementById("files")
+    let upload_social = document.getElementById("upload_social")
 
     function create_control_buttons(file_name) {
       let container = document.createElement("div")
@@ -87,6 +88,14 @@
 
           curr.dataset["file"] = `${f2_num}.${f1_ext}`
           prev.dataset["file"] = `${f1_num}.${f2_ext}`
+
+          f1_num = curr.children[0].attributes.src["nodeValue"].split(".")[0]
+          f2_num = prev.children[0].attributes.src["nodeValue"].split(".")[0]
+          f1_ext = curr.children[0].attributes.src["nodeValue"].split(".")[1]
+          f2_ext = prev.children[0].attributes.src["nodeValue"].split(".")[1]
+
+          curr.children[0].src = `${f2_num}.${f1_ext}`
+          prev.children[0].src = `${f1_num}.${f2_ext}`
         }
       })
     }
@@ -108,6 +117,14 @@
 
           curr.dataset["file"] = `${f2_num}.${f1_ext}`
           next.dataset["file"] = `${f1_num}.${f2_ext}`
+
+          f1_num = curr.children[0].attributes.src["nodeValue"].split(".")[0]
+          f2_num = next.children[0].attributes.src["nodeValue"].split(".")[0]
+          f1_ext = curr.children[0].attributes.src["nodeValue"].split(".")[1]
+          f2_ext = next.children[0].attributes.src["nodeValue"].split(".")[1]
+
+          curr.children[0].src = `${f2_num}.${f1_ext}`
+          next.children[0].src = `${f1_num}.${f2_ext}`
         }
       })
     }
@@ -123,7 +140,6 @@
     }
 
     async function preview_files(response) {
-      response = await response.json()
       let added_files = response["files"]
       let files_div = document.getElementById("files-preview")
 
@@ -135,7 +151,6 @@
         let new_container = document.createElement("div")
         new_container.classList.add("image")
         new_container.dataset["file"] = file_name
-        new_container.appendChild(create_control_buttons(file_name))
         if (type == "image") {
           let new_img = document.createElement("img")
           new_img.src = location
@@ -147,12 +162,19 @@
           new_video.controls = true
           new_container.appendChild(new_video)
         }
+        new_container.appendChild(create_control_buttons(file_name))
         files_div.appendChild(new_container)
       })
     }
 
     files.addEventListener("change", event => {
-      let files = [...event.target.files]
+      let files = [...event.currentTarget.files]
+      let target = event.currentTarget
+      let icons = [...document.getElementsByClassName(".fa-upload")]
+      target.disabled = true
+      icons.forEach(icon => {
+        icon.classList.add("fa-beat")
+      })
       let data = new FormData()
       files.forEach((file, index) => {
         data.append(`file-${index}`, file)
@@ -160,8 +182,64 @@
       fetch(`/upload?id=${session_id}`, {
         method: "POST",
         body: data
-      }).then(preview_files)
+      }).then(async (response) => {
+        target.disabled = false
+        icons.forEach(icon => {
+          icon.classList.remove("fa-beat")
+        })
+        response = await response.json()
+        await preview_files(response)
+      })
       event.target.value = ""
+    })
+
+    function flash(message) {
+      // implement flashin code
+      let flashes = document.getElementById("flashes")
+      flashes.innerText = ""
+      if (message) {
+        let new_flash = document.createElement("div")
+        new_flash.classList.add("notification", "is-danger")
+        new_flash.innerText = message
+        flashes.appendChild(new_flash)
+      }
+    }
+
+    upload_social.addEventListener("click", event => {
+      let target = event.currentTarget
+      target.disabled = true
+      target.classList.add("is-loading")
+      let url = document.getElementById("social_url").value
+      fetch(`/upload_social?id=${session_id}`, {
+        method: "POST",
+        body: url
+      }).then(async (response) => {
+        target.disabled = false
+        target.classList.remove("is-loading")
+        response = await response.json()
+        switch (response["response"]) {
+          case "success":
+            flash()
+            await preview_files(response)
+            break
+          case "incomplete":
+            flash("This may be the incomplete response")
+            await preview_files(response)
+            break
+          case "failed":
+            flash(response["message"])
+            break
+          case "removed":
+            flash("This post has been removed")
+            break
+          case "unsupported":
+            flash("This post is unsupported")
+            break
+          case "rate_limited":
+            flash(`We're being rate limited by this service for ${response["time"]}s more`)
+            break
+        }
+      })
     })
     
     let up_buttons = [...document.getElementsByClassName("up-button")]
@@ -195,6 +273,9 @@
       </div>
     {% endfor %}
     {% endwith %}
+    <div id="flashes">
+
+    </div>
     <form method="POST" action="{{ url_for('main.add_post') }}">
       <div class="field">
         <label class="label">Date/Time</label>
@@ -214,6 +295,17 @@
         <label class="label">Tags (comma separated)</label>
         <div class="control">
           <input class="input" type="text" name="tags" value="{{ tags }}">
+        </div>
+      </div>
+
+      <label class="label">Upload from the internet</label>
+      <div class="field has-addons has-addons-fullwidth">
+        <div class="control">
+          <input class="input" type="text" id="social_url">
+        </div>
+
+        <div style="flex-grow: initial" class="control">
+          <button class="button is-info" type="button" id="upload_social">Upload</button>
         </div>
       </div>
 
@@ -239,6 +331,11 @@
         {% if files %}
         {% for file in files %}
           <div class="image" data-file="{{ file["file"] }}">
+            {% if file["type"] == "image" %}
+            <img src="{{ file["location"] }}">
+            {% else %}
+            <video style="display: block" src="{{ file["location"] }}" controls>
+            {% endif %}
             <div class="control-buttons buttons are-small">
               <button type="button" class="button is-info is-rounded up-button">
                 <i class="fas fa-arrow-up"></i>
@@ -250,11 +347,6 @@
                 <i class="fas fa-trash"></i>
               </button>
             </div>
-            {% if file["type"] == "image" %}
-            <img src="{{ file["location"] }}">
-            {% else %}
-            <video style="display: block" src="{{ file["location"] }}" controls>
-            {% endif %}
           </div>
         {% endfor %}
         {% endif %}
