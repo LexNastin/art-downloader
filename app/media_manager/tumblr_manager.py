@@ -1,7 +1,7 @@
 import pytumblr
 import re
 from bs4 import BeautifulSoup
-from response import Response
+from .response import Response
 
 class TumblrManager:
     def __init__(self, consumer_key=None, consumer_secret=None, oauth_token=None, oauth_secret=None):

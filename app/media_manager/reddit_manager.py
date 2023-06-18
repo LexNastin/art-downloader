@@ -1,7 +1,7 @@
 import requests
 import html
 import json
-from response import Response
+from .response import Response
 
 class RedditManager:
     def get_image_links(self, url):

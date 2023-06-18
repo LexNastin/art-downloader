@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from .media_manager import MediaManager
 
 load_dotenv()
 SCRIPT_DIR = os.getcwd()
@@ -15,7 +16,7 @@ os.makedirs(MEDIA_DIR, exist_ok=True)
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 db = SQLAlchemy()
-# media_manager = MediaManager()
+media_manager = MediaManager()
 
 def create_app():
     # create app

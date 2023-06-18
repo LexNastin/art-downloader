@@ -1,11 +1,13 @@
 from functools import wraps
+from urllib.parse import urlparse
+from urllib.request import urlopen
 from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.security import safe_join
 from flask_login import current_user, login_required
 from .thumbnails import THUMBNAIL_DIR, gen_thumbnail, get_thumbnail
-from .models import Post
 from .posts import delete_post, get_all_posts, get_post, new_post, Response
-# from . import media_manager
+from . import media_manager
+from .media_manager import Response as MResponse
 from . import DATA_DIR, MEDIA_DIR, TEMP_DIR
 from .settings import get_setting, set_setting
 from datetime import datetime as dt
@@ -183,6 +185,48 @@ def upload():
         file.save(new_path)
     uploaded_files.sort(key=lambda x: int( x["file"].split(".")[0] ))
     return {
+        "files": uploaded_files
+    }
+
+@main.route("/upload_social", methods=["POST"])
+@login_required
+@admin_only
+def upload_social():
+    session_id = request.args.get("id")
+    media_url = request.get_data().decode("UTF-8")
+    if not session_id:
+        return "No session id provided", 400
+    response = media_manager.get_image_links(media_url)
+    if response["response"] != MResponse.SUCCESS:
+        return response
+    links = response["links"]
+    upload_path = safe_join(TEMP_DIR, session_id)
+    os.makedirs(upload_path, exist_ok=True)
+    start_index = 0
+    existing_files = os.listdir(upload_path)
+    if existing_files:
+        existing_files.sort(key=lambda x: int( x.split(".")[0] ))
+        start_index = int( existing_files[-1].split(".")[0] ) + 1
+    uploaded_files = []
+    for index, link in enumerate(links):
+        index += start_index
+        parsed_link = urlparse(link)
+        name = parsed_link.path
+        ext = name.split(".")[-1]
+        new_filename = f"{index}.{ext}"
+        uploaded_files.append({
+            "location": f"/temp/{session_id}/{new_filename}",
+            "type": mimetypes.guess_type(new_filename)[0].split("/")[0],
+            "file": new_filename
+        })
+        new_path = safe_join(upload_path, new_filename)
+        dl_req = urlopen(link)
+        data = dl_req.read()
+        with open(new_path, "wb") as output:
+            output.write(data)
+    uploaded_files.sort(key=lambda x: int( x["file"].split(".")[0] ))
+    return {
+        "response": "success",
         "files": uploaded_files
     }
 

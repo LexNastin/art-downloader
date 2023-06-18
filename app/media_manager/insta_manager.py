@@ -1,7 +1,7 @@
 import json
 import re
 import requests
-from response import Response
+from .response import Response
 
 class InstaManager:
     def _get_img(_, candidates):

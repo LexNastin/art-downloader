@@ -6,7 +6,7 @@ from .tumblr_manager import TumblrManager
 from .twitter_manager import TwitterManager
 import requests
 import re
-from response import Response
+from .response import Response
 from urllib.parse import urlparse
 
 load_dotenv()
