@@ -66,10 +66,9 @@ def gen_thumbnail(timestamp):
     if len(media_files) > 4:
         media_files = media_files[:4]
 
-    mimetype = mimetypes.guess_type(media_files[0])[0].split("/")[0]
-
     images = []
     for media_file in media_files:
+        mimetype = mimetypes.guess_type(media_file)[0].split("/")[0]
         if mimetype == "video":
             video = cv2.VideoCapture(os.path.join(post_media_dir, media_file))
             frames = video.get(cv2.CAP_PROP_FRAME_COUNT)
