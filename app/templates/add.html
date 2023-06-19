@@ -89,13 +89,8 @@
           curr.dataset["file"] = `${f2_num}.${f1_ext}`
           prev.dataset["file"] = `${f1_num}.${f2_ext}`
 
-          f1_num = curr.children[0].attributes.src["nodeValue"].split(".")[0]
-          f2_num = prev.children[0].attributes.src["nodeValue"].split(".")[0]
-          f1_ext = curr.children[0].attributes.src["nodeValue"].split(".")[1]
-          f2_ext = prev.children[0].attributes.src["nodeValue"].split(".")[1]
-
-          curr.children[0].src = `${f2_num}.${f1_ext}`
-          prev.children[0].src = `${f1_num}.${f2_ext}`
+          curr.children[0].src = `/temp/${session_id}/${curr.dataset["file"]}?cache-break=${Date.now()}`
+          prev.children[0].src = `/temp/${session_id}/${prev.dataset["file"]}?cache-break=${Date.now()}`
         }
       })
     }
@@ -118,13 +113,8 @@
           curr.dataset["file"] = `${f2_num}.${f1_ext}`
           next.dataset["file"] = `${f1_num}.${f2_ext}`
 
-          f1_num = curr.children[0].attributes.src["nodeValue"].split(".")[0]
-          f2_num = next.children[0].attributes.src["nodeValue"].split(".")[0]
-          f1_ext = curr.children[0].attributes.src["nodeValue"].split(".")[1]
-          f2_ext = next.children[0].attributes.src["nodeValue"].split(".")[1]
-
-          curr.children[0].src = `${f2_num}.${f1_ext}`
-          next.children[0].src = `${f1_num}.${f2_ext}`
+          curr.children[0].src = `/temp/${session_id}/${curr.dataset["file"]}?cache-break=${Date.now()}`
+          next.children[0].src = `/temp/${session_id}/${next.dataset["file"]}?cache-break=${Date.now()}`
         }
       })
     }
@@ -334,7 +324,7 @@
             {% if file["type"] == "image" %}
             <img src="{{ file["location"] }}">
             {% else %}
-            <video style="display: block" src="{{ file["location"] }}" controls>
+            <video style="display: block" src="{{ file["location"] }}" controls></video>
             {% endif %}
             <div class="control-buttons buttons are-small">
               <button type="button" class="button is-info is-rounded up-button">
