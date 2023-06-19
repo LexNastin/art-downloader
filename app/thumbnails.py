@@ -3,6 +3,7 @@ import os
 import mimetypes
 import cv2
 from PIL import Image
+from werkzeug.security import safe_join
 
 THUMBNAIL_DIR = os.path.join(DATA_DIR, "thumbnails")
 os.makedirs(THUMBNAIL_DIR, exist_ok=True)
@@ -53,8 +54,8 @@ def get_fail():
 
 #16776WIDTH58
 def gen_thumbnail(timestamp):
-    thumbnail_file = os.path.join(THUMBNAIL_DIR, f"{timestamp}.webp")
-    post_media_dir = os.path.join(MEDIA_DIR, timestamp)
+    thumbnail_file = safe_join(THUMBNAIL_DIR, f"{timestamp}.webp")
+    post_media_dir = safe_join(MEDIA_DIR, timestamp)
     if not os.path.exists(post_media_dir):
         return get_fail()
     media_files = os.listdir(post_media_dir)
@@ -146,7 +147,7 @@ def gen_thumbnail(timestamp):
     return f"/thumb/{timestamp}.webp"
 
 def get_thumbnail(timestamp):
-    thumbnail_file = os.path.join(THUMBNAIL_DIR, f"{timestamp}.webp")
+    thumbnail_file = safe_join(THUMBNAIL_DIR, f"{timestamp}.webp")
     if os.path.exists(thumbnail_file):
         return f"/thumb/{timestamp}.webp"
 

@@ -60,7 +60,7 @@ def post():
     post = get_post(post_ts)
     if not post:
         flash("Post not found")
-    post_dir = os.path.join(MEDIA_DIR, str(post_ts))
+    post_dir = safe_join(MEDIA_DIR, str(post_ts))
     media = []
     if os.path.exists(post_dir):
         for file in os.listdir(post_dir):
