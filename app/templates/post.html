@@ -83,6 +83,7 @@
 
       <p>{{ strftime(post.timestamp) }}</p>
 
+      {% if current_user.admin %}
       <br>
       <div class="columns is-mobile">
         <div class="column">
@@ -102,6 +103,7 @@
           </button>
         </div>
       </div>
+      {% endif %}
     {% endif %}
   </div>
 </div>
