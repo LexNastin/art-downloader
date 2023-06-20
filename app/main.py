@@ -2,13 +2,14 @@ from functools import wraps
 from urllib.parse import urlparse
 from urllib.request import urlopen
 from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
-from werkzeug.security import safe_join
+from werkzeug.security import safe_join, generate_password_hash
 from flask_login import current_user, login_required
+from .models import User
 from .thumbnails import THUMBNAIL_DIR, gen_thumbnail, get_thumbnail
 from .posts import delete_post, get_all_posts, get_post, new_post, Response
 from . import media_manager
 from .media_manager import Response as MResponse
-from . import DATA_DIR, MEDIA_DIR, TEMP_DIR
+from . import DATA_DIR, MEDIA_DIR, TEMP_DIR, db
 from .settings import get_setting, set_setting
 from datetime import datetime as dt
 import os
@@ -322,6 +323,25 @@ def settings_post():
 
     set_setting("allow_signups", allow_signups)
     set_setting("app_name", app_name)
+    return redirect(url_for("main.settings"))
+
+@main.route("/user_settings", methods=["POST"])
+@login_required
+@admin_only
+def user_settings_post():
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    old_username = current_user.username
+    user = User.query.filter_by(username=old_username).first()
+
+    if username:
+        user.username = username
+
+    if password:
+        user.password = generate_password_hash(password)
+
+    db.session.commit()
     return redirect(url_for("main.settings"))
 
 # preview paths

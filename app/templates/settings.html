@@ -29,6 +29,32 @@
       </div>
     </form>
   </div>
+  <div class="box">
+    <h1 class="title">User Management</h1>
+    <p>// TODO: implement all user settings</p>
+  </div>
   {% endif %}
+  <div class="box">
+    <h1 class="title">User Settings</h1>
+    <form method="POST" action="{{ url_for('main.user_settings_post') }}">
+      <div class="field">
+        <label class="label">Username</label>
+        <div class="control">
+          <input class="input" type="text" name="username" value="{{ current_user.username }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Password (leave empty to keep current password)</label>
+        <div class="control">
+          <input class="input" type="password" name="password" autocomplete="new-password">
+        </div>
+      </div>
+
+      <button class="button is-fullwidth is-link">
+        <strong>Save</strong>
+      </button>
+    </form>
+  </div>
 </div>
 {% endblock %}

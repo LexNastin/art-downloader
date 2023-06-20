@@ -59,7 +59,7 @@ def update_post(timestamp, new_timestamp=None,source=None, tags=None):
     post = Post.query.filter_by(timestamp=timestamp).first()
 
     if new_timestamp and timestamp != new_timestamp:
-        existing_post = Post.query.filter_by(new_timestamp)
+        existing_post = Post.query.filter_by(timestamp=new_timestamp).first()
 
         if existing_post:
             return {
