@@ -8,8 +8,8 @@ from werkzeug.security import safe_join
 THUMBNAIL_DIR = os.path.join(DATA_DIR, "thumbnails")
 os.makedirs(THUMBNAIL_DIR, exist_ok=True)
 
-WIDTH = 960
-HEIGHT = 540
+WIDTH = 1440
+HEIGHT = 810
 HWIDTH = WIDTH//2
 HHEIGHT = HEIGHT//2
 
@@ -23,7 +23,7 @@ def crop(image: Image.Image, des_width, des_height):
         crop_x1 = 0
         crop_x2 = width
         crop_y1 = height//2 - new_height//2
-        crop_y2 = height//2 + new_height//2 - 1
+        crop_y2 = height//2 + new_height//2
     else:
         # width higher than needed
         new_width = round(height/des_height*des_width)
