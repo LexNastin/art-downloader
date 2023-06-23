@@ -88,6 +88,27 @@
             <div style="margin-top: auto">
               <p>{{ strftime(post.timestamp) }}</p>
             </div>
+            {% if current_user.admin %}
+            <br>
+            <div class="columns is-mobile">
+              <div class="column">
+                <a href="/edit?ts={{ post.timestamp }}" class="button is-link is-fullwidth">
+                  <span class="icon">
+                    <i class="fas fa-pencil"></i>
+                  </span>
+                  <span>Edit</span>
+                </a>
+               </div>
+              <div class="column">
+                <button class="button is-danger is-fullwidth modal-trigger" data-target="delete-modal">
+                  <span class="icon">
+                    <i class="fas fa-trash"></i>
+                  </span>
+                  <span>Delete</span>
+                </button>
+              </div>
+            </div>
+            {% endif %}
             {% endif %}
           </div>
         </div>
