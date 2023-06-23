@@ -143,11 +143,11 @@
         new_container.dataset["file"] = file_name
         if (type == "image") {
           let new_img = document.createElement("img")
-          new_img.src = location
+          new_img.src = location + `?cache-break=${Date.now()}`
           new_container.appendChild(new_img)
         } else {
           let new_video = document.createElement("video")
-          new_video.src = location
+          new_video.src = location + `?cache-break=${Date.now()}`
           new_video.style.display = "block"
           new_video.controls = true
           new_container.appendChild(new_video)
