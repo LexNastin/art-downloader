@@ -23,6 +23,7 @@ def get_random():
     random = os.urandom(5).hex()
     return random
 
+# stolen from SO
 # function to split array into array of arrays of size n
 def split_into(n, arr):
     if len(arr) % 3:
@@ -43,6 +44,40 @@ def admin_only(func):
 
 def strftime(timestamp):
     return dt.fromtimestamp(timestamp).strftime("%d %b %Y - %H:%M:%S")
+
+# stolen from SO
+def sizeof_fmt(num, suffix="B"):
+    for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
+        if abs(num) < 1024.0:
+            return f"{num:3.1f}{unit}{suffix}"
+        num /= 1024.0
+    return f"{num:.1f}Yi{suffix}"
+
+# stolen from Python Docs
+def get_tree_size(path):
+    """Return total size of files in given path and subdirs."""
+    total = 0
+    for entry in os.scandir(path):
+        if entry.is_dir(follow_symlinks=False):
+            total += get_tree_size(entry.path)
+        else:
+            total += entry.stat(follow_symlinks=False).st_size
+    return total
+
+def get_stats():
+    all_posts = get_all_posts()
+    posts = len(all_posts)
+    tags = set()
+    for post in all_posts:
+        for tag in post.tags:
+            tags.add(tag)
+    tags = len(tags)
+    space = sizeof_fmt(get_tree_size(DATA_DIR))
+    return {
+        "posts": posts,
+        "tags": tags,
+        "space": space
+    }
 
 # main website ui
 @main.route("/")
@@ -310,7 +345,7 @@ def media_delete():
 @login_required
 def settings():
     allow_signups = int(get_setting("allow_signups", "1"))
-    return render_template("settings.html", allow_signups=allow_signups)
+    return render_template("settings.html", allow_signups=allow_signups, stats=get_stats())
 
 @main.route("/settings", methods=["POST"])
 @login_required
