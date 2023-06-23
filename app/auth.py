@@ -59,7 +59,7 @@ def signup_post():
         flash("Username taken!")
         return redirect(url_for("auth.signup"))
 
-    admin = False if User.query.all() else True
+    admin = False if User.query.filter_by(admin=True).first() else True
 
     hash = generate_password_hash(password)
     new_user = User(username=username, password=hash, admin=admin)

@@ -116,12 +116,14 @@
     </header>
 
     <section class="modal-card-body">
-      <p>You're about delete this post!</p>
+      <p>You're about to delete this post!</p>
     </section>
 
     <div class="modal-card-foot">
-      <a href="/delete?ts={{ post.timestamp }}" class="button">Yes</a>
-      <button class="button is-info">No</button>
+      <form method="POST" action="/delete?ts={{ post.timestamp }}">
+        <button class="button">Yes</a>
+        <button class="button is-info" type="button">No</button>
+      </form>
     </div>
   </div>
 </div>

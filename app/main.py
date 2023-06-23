@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from urllib.request import urlopen
 from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.security import safe_join, generate_password_hash
-from flask_login import current_user, login_required
+from flask_login import current_user, login_required, logout_user
 from .models import User
 from .thumbnails import THUMBNAIL_DIR, gen_thumbnail, get_thumbnail
 from .posts import delete_post, get_all_posts, get_post, new_post, Response
@@ -136,7 +136,7 @@ def add_post():
     return redirect(url_for("main.index"))
 
 # post manipulation paths
-@main.route("/delete")
+@main.route("/delete", methods=["POST"])
 @login_required
 @admin_only
 def delete():
@@ -325,6 +325,7 @@ def settings_post():
     set_setting("app_name", app_name)
     return redirect(url_for("main.settings"))
 
+# user setting paths
 @main.route("/user_settings", methods=["POST"])
 @login_required
 @admin_only
@@ -343,6 +344,20 @@ def user_settings_post():
 
     db.session.commit()
     return redirect(url_for("main.settings"))
+
+@main.route("/delete_own_account", methods=["GET", "POST"])
+@login_required
+def delete_own_account():
+    if current_user.admin:
+        flash("As an admin, you can't delete your own account. You can however delete other admin accounts.")
+        return redirect(url_for("main.settings"))
+    user = User.query.filter_by(username=current_user.username).first()
+
+    db.session.delete(user)
+    db.session.commit()
+
+    logout_user()
+    return redirect(url_for("auth.login"))
 
 # preview paths
 @main.route("/media/<path:path>")
