@@ -345,7 +345,7 @@ def user_settings_post():
     db.session.commit()
     return redirect(url_for("main.settings"))
 
-@main.route("/delete_own_account", methods=["GET", "POST"])
+@main.route("/delete_own_account", methods=["POST"])
 @login_required
 def delete_own_account():
     if current_user.admin:
