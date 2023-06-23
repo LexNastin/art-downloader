@@ -144,12 +144,14 @@
         if (type == "image") {
           let new_img = document.createElement("img")
           new_img.src = location + `?cache-break=${Date.now()}`
+          new_img.classList.add("image", "is-fullwidth")
           new_container.appendChild(new_img)
         } else {
           let new_video = document.createElement("video")
           new_video.src = location + `?cache-break=${Date.now()}`
           new_video.style.display = "block"
           new_video.controls = true
+          new_video.classList.add("image", "is-fullwidth")
           new_container.appendChild(new_video)
         }
         new_container.appendChild(create_control_buttons(file_name))
@@ -253,7 +255,7 @@
   })
 </script>
 
-<div class="column is-4 is-offset-4">
+<div class="column is-8 is-offset-2 is-6-desktop is-offset-3-desktop is-4-widescreen is-offset-4-widescreen">
   <div class="box">
     <h1 class="title">Add Post</h1>
     {% with messages = get_flashed_messages() %}
@@ -295,7 +297,7 @@
         </div>
 
         <div class="control">
-          <button class="button is-info" type="button" id="upload_social">Upload</button>
+          <button class="button" type="button" id="upload_social">Upload</button>
         </div>
       </div>
 
@@ -322,9 +324,9 @@
         {% for file in files %}
           <div class="image" data-file="{{ file["file"] }}">
             {% if file["type"] == "image" %}
-            <img src="{{ file["location"] }}">
+            <img class="image is-fullwidth" src="{{ file["location"] }}">
             {% else %}
-            <video style="display: block" src="{{ file["location"] }}" controls></video>
+            <video class="image is-fullwidth" style="display: block" src="{{ file["location"] }}" controls></video>
             {% endif %}
             <div class="control-buttons buttons are-small">
               <button type="button" class="button is-info is-rounded up-button">
