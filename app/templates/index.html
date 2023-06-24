@@ -1,6 +1,76 @@
 {% extends "base.html" %}
 
 {% block content %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // does the abracadabra (which my brain stopped doing on Thursday bc of all the setup required for an A/D ctf against friends)
+    // keyboard spam:er wo miurwefriemro r' qc oer  ;io je jmio rejiwo iocer i icocroivw the keyboard sure does feel nice today
+    // now - if someone sees this total loss of sanity, msg me! check if i haven't gone insane yet :eyes: :joy:
+    function get_filters(filters) {
+      let result = {
+        include: [],
+        exclude: []
+      }
+      filters.forEach(filter => {
+        let exp_classes = [...filter.classList]
+        if (exp_classes.includes("is-success")) {
+          result["include"].push(filter.innerText)
+        } else if (exp_classes.includes("is-danger")) {
+          result["exclude"].push(filter.innerText)
+        }
+      })
+
+      return result
+    }
+
+    function magic_toggle(event) {
+      let target = event.currentTarget
+      let classes = target.classList
+      let exp_classes = [...classes]
+      if (exp_classes.includes("is-success")) {
+        classes.remove("is-success")
+        classes.add("is-danger")
+      } else if (exp_classes.includes("is-danger")) {
+        classes.remove("is-danger")
+      } else {    
+        classes.add("is-success")
+      }
+    }
+
+    let filters = [...document.getElementById("filters").children]
+    filters.forEach(filter => {
+      filter.addEventListener("click", magic_toggle)
+      filter.addEventListener("mousedown", event => {
+        if (event.detail > 1) {
+          event.preventDefault()
+        }
+        return false
+      })
+    })
+
+    let filters_submit = document.getElementById("filters-submit")
+    filters_submit.addEventListener("click", event => {
+      let target = event.currentTarget
+      let form = target.parentElement
+      target.classList.add("is-loading")
+      let {include, exclude} = get_filters(filters)
+      include = JSON.stringify(include) 
+      exclude = JSON.stringify(exclude) 
+      let include_input = document.createElement("input")
+      let exclude_input = document.createElement("input")
+      include_input.name = "include"
+      exclude_input.name = "exclude"
+      include_input.value = include
+      exclude_input.value = exclude
+      include_input.hidden = true
+      exclude_input.hidden = true
+      form.appendChild(include_input)
+      form.appendChild(exclude_input)
+      form.submit()
+    })
+  })
+</script>
+
 {% with messages = get_flashed_messages() %}
 {% if messages %}
 <div class="column is-4 is-offset-4">
@@ -14,6 +84,27 @@
 </div>
 {% endif %}
 {% endwith %}
+<div class="column is-8 is-offset-2">
+  <div class="box">
+    <div class="columns is-multiline">
+      <div class="column is-narrow">
+        <p>Filter by tags:</p>
+      </div>
+      <div class="column tags" id="filters">
+        {% for tag in tags %}
+        <span style="cursor: pointer" class="tag is-medium {{ "is-success" if tag in include else "" }} {{ "is-danger" if tag in exclude else "" }}">
+          {{ tag }}
+        </span>
+        {% endfor %}
+      </div>
+      <div class="column is-narrow">
+        <form method="POST" action="/">
+          <button type="button" id="filters-submit" class="button">Apply</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% for column in posts %}
 <div class="column is-8 is-offset-2">
   <div class="columns is-centered is-desktop">

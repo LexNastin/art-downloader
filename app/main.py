@@ -12,9 +12,11 @@ from .media_manager import Response as MResponse
 from . import DATA_DIR, MEDIA_DIR, TEMP_DIR, db
 from .settings import get_setting, set_setting
 from datetime import datetime as dt
+from ordered_set import OrderedSet
 import os
 import mimetypes
 import shutil
+import json
 
 main = Blueprint("main", __name__)
 
@@ -53,6 +55,13 @@ def sizeof_fmt(num, suffix="B"):
         num /= 1024.0
     return f"{num:.1f}Yi{suffix}"
 
+def get_all_tags(all_posts):
+    tags = set()
+    for post in all_posts:
+        for tag in post.tags:
+            tags.add(tag)
+    return tags
+
 # stolen from Python Docs
 def get_tree_size(path):
     """Return total size of files in given path and subdirs."""
@@ -67,11 +76,7 @@ def get_tree_size(path):
 def get_stats():
     all_posts = get_all_posts()
     posts = len(all_posts)
-    tags = set()
-    for post in all_posts:
-        for tag in post.tags:
-            tags.add(tag)
-    tags = len(tags)
+    tags = len(get_all_tags(all_posts))
     space = sizeof_fmt(get_tree_size(DATA_DIR))
     return {
         "posts": posts,
@@ -84,7 +89,44 @@ def get_stats():
 @login_required
 def index():
     posts = get_all_posts()
-    return render_template("index.html", posts=list(split_into(3, posts)), get_thumbnail=get_thumbnail, strftime=strftime)
+    return render_template("index.html",
+        posts=list(split_into(3, posts)),
+        get_thumbnail=get_thumbnail,
+        strftime=strftime,
+        tags=sorted(get_all_tags(posts))
+    )
+
+# filtered af posts
+@main.route("/", methods=["POST"])
+@login_required
+def index_filtered():
+    include = json.loads(request.form.get("include"))
+    exclude = json.loads(request.form.get("exclude"))
+    posts = get_all_posts()
+    actual_posts = []
+
+    if not include:
+        for post in posts:
+            actual_posts.append(post)
+    for post in posts:
+        if all(item in post.tags for item in include):
+            actual_posts.append(post)
+    for item in exclude:
+        for post in actual_posts:
+            if item in post.tags:
+                actual_posts.remove(post)
+
+    actual_posts = list(OrderedSet(actual_posts))
+
+    return render_template(
+        "index.html",
+        posts=list(split_into(3, actual_posts)),
+        get_thumbnail=get_thumbnail,
+        strftime=strftime,
+        tags=sorted(get_all_tags(posts)),
+        include=include,
+        exclude=exclude
+    )
 
 # post viewing path
 @main.route("/post")

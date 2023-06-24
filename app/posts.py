@@ -2,6 +2,7 @@ from .models import Post
 from . import db
 import json
 from enum import Enum
+from ordered_set import OrderedSet
 
 class Response(Enum):
     SUCCESS = 1
@@ -27,6 +28,8 @@ def get_all_posts():
 
 def new_post(timestamp, source="", tags=[]):
     post = Post.query.filter_by(timestamp=timestamp).first()
+    tags = OrderedSet(tags)
+    tags = list(tags)
 
     if not post:
         new_setting = Post(timestamp=timestamp, source=source, tags=json.dumps(tags))
@@ -66,6 +69,10 @@ def update_post(timestamp, new_timestamp=None,source=None, tags=None):
                 "response": Response.FAILED,
                 "message": "A post already exists at that time"
             }
+
+    if tags:
+        tags = OrderedSet(tags)
+        tags = list(tags)
 
     if post:
         post.timestamp = new_timestamp or post.timestamp
