@@ -90,7 +90,7 @@
       <div class="column is-narrow">
         <p>Filter by tags:</p>
       </div>
-      <div class="column tags" id="filters">
+      <div style="margin-bottom: 0" class="column tags" id="filters">
         {% for tag in tags %}
         <span style="cursor: pointer" class="tag is-medium {{ "is-success" if tag in include else "" }} {{ "is-danger" if tag in exclude else "" }}">
           {{ tag }}
