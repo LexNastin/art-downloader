@@ -11,7 +11,10 @@ class Twitter:
     def __init__(self, log_level=1):
         self.log_level = log_level
         self._log("Loading guest cookie...")
-        self.guest_token = self._get_guest_token()
+        try:
+            self.guest_token = self._get_guest_token()
+        except:
+            self._log("Failed to load guest cookie")
         self._log("Guest cookie loaded")
 
     def _log(self, text):
