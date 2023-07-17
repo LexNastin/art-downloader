@@ -14,9 +14,9 @@
       filters.forEach(filter => {
         let exp_classes = [...filter.classList]
         if (exp_classes.includes("is-success")) {
-          result["include"].push(filter.innerText)
+          result["include"].push(filter["dataset"]["tag"])
         } else if (exp_classes.includes("is-danger")) {
-          result["exclude"].push(filter.innerText)
+          result["exclude"].push(filter["dataset"]["tag"])
         }
       })
 
@@ -92,7 +92,7 @@
       </div>
       <div style="margin-bottom: 0" class="column tags" id="filters">
         {% for tag in tags %}
-        <span style="cursor: pointer" class="tag is-medium {{ "is-success" if tag in include else "" }} {{ "is-danger" if tag in exclude else "" }}">
+        <span data-tag="{{ tag }}" style="cursor: pointer" class="tag is-medium {{ "is-success" if tag in include else "" }} {{ "is-danger" if tag in exclude else "" }}">
           {{ tag }}
         </span>
         {% endfor %}
