@@ -141,7 +141,9 @@ def post():
     post_dir = safe_join(MEDIA_DIR, str(post_ts))
     media = []
     if os.path.exists(post_dir):
-        for file in os.listdir(post_dir):
+        files = os.listdir(post_dir)
+        files.sort(key=lambda x: int(x.split(".")[0]))
+        for file in files:
             media.append({
                 "location": f"/media/{post_ts}/{file}",
                 "type": mimetypes.guess_type(file)[0].split("/")[0]
