@@ -389,7 +389,9 @@ def media_delete():
 @login_required
 def settings():
     allow_signups = int(get_setting("allow_signups", "1"))
-    return render_template("settings.html", allow_signups=allow_signups, stats=get_stats())
+    users = [user.username for user in User.query.all()]
+    users.remove(current_user.username)
+    return render_template("settings.html", allow_signups=allow_signups, users=users, stats=get_stats())
 
 @main.route("/settings", methods=["POST"])
 @login_required
@@ -407,13 +409,17 @@ def settings_post():
 # user setting paths
 @main.route("/user_settings", methods=["POST"])
 @login_required
-@admin_only
 def user_settings_post():
     username = request.form.get("username")
     password = request.form.get("password")
 
     old_username = current_user.username
     user = User.query.filter_by(username=old_username).first()
+    new_user = User.query.filter_by(username=username).first()
+
+    if new_user and username == current_user.username:
+        flash("Username taken!")
+        return redirect(url_for("main.settings"))
 
     if username:
         user.username = username
@@ -437,6 +443,64 @@ def delete_own_account():
 
     logout_user()
     return redirect(url_for("auth.login"))
+
+@main.route("/user/<path:username>")
+@login_required
+@admin_only
+def user(username):
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        flash("User doesn't exist!")
+        return redirect(url_for("main.settings"))
+
+    if current_user.username == username:
+        flash("Can't open that page on yourself!")
+        return redirect(url_for("main.settings"))
+
+    return render_template("user.html", username=username, admin=user.admin)
+
+@main.route("/user/<path:username>/delete_account", methods=["POST"])
+@login_required
+@admin_only
+def delete_account(username):
+    if current_user.username == username:
+        flash("As an admin, you can't delete your own account. You can however delete other admin accounts.")
+        return redirect(url_for("main.settings"))
+    user = User.query.filter_by(username=username).first()
+
+    db.session.delete(user)
+    db.session.commit()
+
+    flash(f"Successfully deleted {username}'s account!")
+    return redirect(url_for("main.settings"))
+
+# user setting paths
+@main.route("/user/<path:username>/user_settings", methods=["POST"])
+@login_required
+@admin_only
+def indiv_user_settings_post(username):
+    new_username = request.form.get("username")
+    password = request.form.get("password")
+    admin = request.form.get("admin") == "on"
+
+    user = User.query.filter_by(username=username).first()
+    new_user = User.query.filter_by(username=new_username).first()
+
+    if new_user and new_username != username:
+        flash("Username taken!")
+        return redirect(url_for("main.user", username=username))
+
+    if new_username:
+        user.username = new_username
+
+    if password:
+        user.password = generate_password_hash(password)
+
+    user.admin = admin
+
+    db.session.commit()
+    return redirect(url_for("main.user", username=new_username or username))
 
 # preview paths
 @main.route("/media/<path:path>")

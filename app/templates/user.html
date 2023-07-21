@@ -49,55 +49,20 @@
 </script>
 
 <div class="column is-8 is-offset-2 is-6-desktop is-offset-3-desktop is-4-widescreen is-offset-4-widescreen">
-  {% if current_user.admin %}
-  <div class="box">
-    <h1 class="title">Website Settings</h1>
-    {% with messages = get_flashed_messages() %}
-    {% for message in messages %}
-      <div class="notification is-danger">
-          {{ message }}
-      </div>
-    {% endfor %}
-    {% endwith %}
-    <form method="POST" action="{{ url_for('main.settings_post') }}">
-      <div class="field">
-        <div class="control">
-          <label class="checkbox">
-            <input type="checkbox" name="allow_signups" {% if allow_signups %} checked {% endif %}>
-            Allow new signups
-          </label>
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">App Name</label>
-        <div class="control">
-          <input class="input" type="text" name="app_name" placeholder="App Name" value="{{ app_name }}">
-        </div>
-      </div>
-      <div class="field">
-        <div class="control">
-          <button class="button is-fullwidth is-link">Save</button>
-        </div>
-      </div>
-    </form>
-  </div>
-  <div class="box">
-    <h1 class="title">User Management</h1>
-    {% if not users %}
-      <p>You are the only user... go get some friends :)</p>
-    {% endif %}
-    {% for username in users %}
-      <a href="{{ url_for('main.user', username=username) }}">{{ username }}</a>
-    {% endfor %}
-  </div>
-  {% endif %}
   <div class="box">
     <h1 class="title">User Settings</h1>
-    <form method="POST" action="{{ url_for('main.user_settings_post') }}">
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+    <div class="notification is-danger">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('main.indiv_user_settings_post', username=username) }}">
       <div class="field">
         <label class="label">Username</label>
         <div class="control">
-          <input class="input" type="text" name="username" value="{{ current_user.username }}">
+          <input class="input" type="text" name="username" value="{{ username }}">
         </div>
       </div>
 
@@ -108,25 +73,26 @@
         </div>
       </div>
 
+      <div class="field">
+          <div class="control">
+              <label class="checkbox">
+                  <input type="checkbox" name="admin" {% if admin %} checked {% endif %}>
+                  Is admin
+              </label>
+          </div>
+      </div>
+
       <div class="columns is-mobile">
-        {% if not current_user.admin %}
         <div class="column">
           <button class="button is-danger is-fullwidth modal-trigger" data-target="delete-modal" type="button">
             <span>Delete Account</span>
           </button>
         </div>
-        {% endif %}
         <div class="column">
           <button class="button is-fullwidth is-link">Save</button>
         </div>
       </div>
     </form>
-  </div>
-  <div class="box">
-    <h1 class="title">Fun Stats!</h1>
-    <p>Number of posts: {{ stats["posts"] }}</p>
-    <p>Number of tags: {{ stats["tags"] }}</p>
-    <p>Space consumed: {{ stats["space"] }}</p>
   </div>
 </div>
 
@@ -138,11 +104,11 @@
     </header>
 
     <section class="modal-card-body">
-      <p>You're about to delete your account!</p>
+    <p>You're about to delete {{ username }}'s account!</p>
     </section>
 
     <div class="modal-card-foot">
-    <form method="POST" action="{{ url_for('main.delete_own_account') }}">
+    <form method="POST" action="{{ url_for('main.delete_account', username=username) }}">
         <button class="button">Yes</a>
         <button class="button is-info" type="button">No</button>
       </form>
