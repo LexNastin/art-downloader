@@ -469,6 +469,10 @@ def delete_account(username):
         return redirect(url_for("main.settings"))
     user = User.query.filter_by(username=username).first()
 
+    if not user:
+        flash("User doesn't exist!")
+        return redirect(url_for("main.settings"))
+
     db.session.delete(user)
     db.session.commit()
 
@@ -486,6 +490,10 @@ def indiv_user_settings_post(username):
 
     user = User.query.filter_by(username=username).first()
     new_user = User.query.filter_by(username=new_username).first()
+
+    if not user:
+        flash("User doesn't exist!")
+        return redirect(url_for("main.settings"))
 
     if new_user and new_username != username:
         flash("Username taken!")
