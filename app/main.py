@@ -129,10 +129,9 @@ def index_filtered():
     )
 
 # post viewing path
-@main.route("/post")
+@main.route("/post/<path:post_ts>")
 @login_required
-def post():
-    post_ts = request.args.get("ts")
+def post(post_ts):
     if post_ts.isdigit():
         post_ts = int(post_ts)
     post = get_post(post_ts)
@@ -215,11 +214,10 @@ def add_post():
     return redirect(url_for("main.index"))
 
 # post manipulation paths
-@main.route("/delete", methods=["POST"])
+@main.route("/post/<path:post_ts>/delete", methods=["POST"])
 @login_required
 @admin_only
-def delete():
-    post_ts = request.args.get("ts")
+def delete(post_ts):
     if post_ts.isdigit():
         post_ts = int(post_ts)
     post = get_post(post_ts)

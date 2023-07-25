@@ -92,6 +92,7 @@
             <br>
             <div class="columns is-mobile">
               <div class="column">
+                <!-- wronggggg (url) -->
                 <a href="/edit?ts={{ post.timestamp }}" class="button is-link is-fullwidth">
                   <span class="icon">
                     <i class="fas fa-pencil"></i>
@@ -129,7 +130,7 @@
     </section>
 
     <div class="modal-card-foot">
-      <form method="POST" action="/delete?ts={{ post.timestamp }}">
+    <form method="POST" action="{{ url_for('main.delete', post_ts=post.timestamp) }}">
         <button class="button">Yes</a>
         <button class="button is-info" type="button">No</button>
       </form>
