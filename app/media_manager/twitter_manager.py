@@ -10,12 +10,7 @@ AUTHORIZATION = "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4p
 class Twitter:
     def __init__(self, log_level=1):
         self.log_level = log_level
-        self._log("Loading guest cookie...")
-        try:
-            self.guest_token = self._get_guest_token()
-        except:
-            self._log("Failed to load guest cookie")
-        self._log("Guest cookie loaded")
+        self.cookie = ""
 
     def _log(self, text):
         if self.log_level >= 1:
@@ -25,73 +20,66 @@ class Twitter:
         if self.log_level >= 2:
             print(f"TwitterMan: {text}")
 
-    def _get_guest_token(self):
-        # now = str(round(datetime.now().timestamp() * 1000))
-        # guest_token_request = requests.get(f"{ROOT_URL}/?logout={now}", allow_redirects=False)
-        # guest_token_cookie_text = guest_token_request.headers["set-cookie"]
-        # guest_token_cookie = SimpleCookie()
-        # guest_token_cookie.load(guest_token_cookie_text)
-        # cookie_loaded = True
-        # try:
-        #     guest_token = guest_token_cookie["guest_id"].value.split("%3A")[-1]
-        # except KeyError:
-        #     cookie_loaded = False
-        # if not cookie_loaded:
-        #     raise Exception("Error in guest token retrieval")
-        twitter_html = requests.get(ROOT_URL).text
-        twitter_cookies = re.findall(r'document.cookie="(.*?)"', twitter_html)
-        if len(twitter_cookies) == 0:
-            raise Exception("Error in guest token retrieval")
-        guest_token_cookie = SimpleCookie()
-        guest_token_cookie.load(twitter_cookies[0])
-        cookie_loaded = True
-        try:
-            guest_token = guest_token_cookie["gt"].value
-        except KeyError:
-            cookie_loaded = False
-        if not cookie_loaded:
-            raise Exception("Error in guest token retrieval")
-        self._debug(f"Get cookie is {guest_token}")
-        return guest_token
-
     def _try_get_tweet_details(self, tweet_id):
         self._debug(f"Getting TweetDetail for {tweet_id}...")
+        cookie_parser = SimpleCookie()
+        cookie_parser.load(self.cookie)
+        try:
+            csrf_token = cookie_parser["ct0"].value
+        except KeyError:
+            raise Exception("Twitter cookie not properly set")
         request_headers = {
             "authorization": AUTHORIZATION,
-            "x-guest-token": self.guest_token
+            "cookie": self.cookie,
+            "x-csrf-token": csrf_token
         }
-        request_body = {
+        variables = {
             "focalTweetId": str(tweet_id),
             "with_rux_injections": True,
             "includePromotedContent": True,
             "withCommunity": True,
-            "withTweetQuoteCount": True,
             "withBirdwatchNotes": True,
-            "withSuperFollowsUserFields": True,
-            "withUserResults": True,
-            "withBirdwatchPivots": True,
-            "withReactionsMetadata": True,
-            "withReactionsPerspective": True,
-            "withSuperFollowsTweetFields": True,
             "withVoice": True
         }
-        request_url = f"{ROOT_URL}/i/api/graphql/kUnCMgMYZCR8GyRZz76IQg/TweetDetail"
+        features = {
+            "rweb_lists_timeline_redesign_enabled": True,
+            "responsive_web_graphql_exclude_directive_enabled": True,
+            "verified_phone_label_enabled": False,
+            "creator_subscriptions_tweet_preview_api_enabled": True,
+            "responsive_web_graphql_timeline_navigation_enabled": True,
+            "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
+            "tweetypie_unmention_optimization_enabled": True,
+            "responsive_web_edit_tweet_api_enabled": True,
+            "graphql_is_translatable_rweb_tweet_is_translatable_enabled": True,
+            "view_counts_everywhere_api_enabled": True,
+            "longform_notetweets_consumption_enabled": True,
+            "responsive_web_twitter_article_tweet_consumption_enabled": False,
+            "tweet_awards_web_tipping_enabled": False,
+            "freedom_of_speech_not_reach_fetch_enabled": True,
+            "standardized_nudges_misinfo": True,
+            "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": True,
+            "longform_notetweets_rich_text_read_enabled": True,
+            "longform_notetweets_inline_media_enabled": True,
+            "responsive_web_media_download_video_enabled": False,
+            "responsive_web_enhance_cards_enabled": False
+        }
+        request_url = f"{ROOT_URL}/i/api/graphql/q94uRCEn65LZThakYcPT6g/TweetDetail"
 
         request_body = {
-            "variables": json.dumps(request_body)
+            "variables": json.dumps(variables),
+            "features": json.dumps(features)
         }
         request = requests.get(request_url, params=request_body, headers=request_headers)
         self._debug(f"Request responded with code {request.status_code}")
+        self._debug(f"and the body {request.text}")
         return request
 
     def get_tweet_details(self, tweet_id):
         tweet_details = self._try_get_tweet_details(tweet_id)
         if tweet_details.status_code == 403:
-            self._debug("Authorization required, trying to get new guest token...")
-            self._get_guest_token()
+            self._debug("Twitter prob screwing us over again...")
         if tweet_details.status_code != 200:
             self._debug("Trying to get tweet again...")
-        if tweet_details.status_code != 200:
             raise Exception(f"Something went wrong trying to get tweet {tweet_id}")
         found = "errors" not in tweet_details.json()
         if not found:
@@ -197,3 +185,6 @@ class TwitterManager:
                 "response": Response.FAILED,
                 "message": repr(e)
             }
+
+    def set_cookie(self, cookie):
+        self.tm.cookie = cookie

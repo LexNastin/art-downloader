@@ -276,6 +276,8 @@ def upload_social():
     media_url = request.get_data().decode("UTF-8")
     if not session_id:
         return "No session id provided", 400
+    twitter_cookie = get_setting("twitter_cookie", "")
+    media_manager.twitter_manager.set_cookie(twitter_cookie)
     response = media_manager.get_image_links(media_url)
     if response["response"] != MResponse.SUCCESS:
         return response
@@ -389,9 +391,10 @@ def media_delete():
 @login_required
 def settings():
     allow_signups = int(get_setting("allow_signups", "1"))
+    twitter_cookie = get_setting("twitter_cookie", "")
     users = [user.username for user in User.query.all()]
     users.remove(current_user.username)
-    return render_template("settings.html", allow_signups=allow_signups, users=users, stats=get_stats())
+    return render_template("settings.html", allow_signups=allow_signups, twitter_cookie=twitter_cookie, users=users, stats=get_stats())
 
 @main.route("/settings", methods=["POST"])
 @login_required
@@ -401,9 +404,13 @@ def settings_post():
     allow_signups = "1" if allow_signups == "on" else "0"
     app_name = request.form.get("app_name") 
     app_name = app_name or get_setting("app_name", "Art Downloader")
+    twitter_cookie = request.form.get("twitter_cookie") 
+    twitter_cookie = twitter_cookie or get_setting("twitter_cookie", "")
 
     set_setting("allow_signups", allow_signups)
     set_setting("app_name", app_name)
+    set_setting("twitter_cookie", twitter_cookie)
+    media_manager.twitter_manager.set_cookie(twitter_cookie)
     return redirect(url_for("main.settings"))
 
 # user setting paths
