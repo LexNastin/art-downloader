@@ -6,6 +6,11 @@ A nice little web-based downloader and viewer for art you find on the internet. 
 
 ### Docker
 
+To begin, clone this repo:
+```sh
+git clone https://github.com/ArchGryphon9362/art-downloader
+```
+
 Make sure you have Docker installed. Edit ports in `docker-compose.yml` and environment variables as needed. You may set the SECRET_KEY variable to something very secure if you wish for logins to persist whenever the container restarts.
 
 Now, to start the container, simply run the following:
