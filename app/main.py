@@ -122,12 +122,15 @@ def index():
     for post in posts:
         if all(item in post.tags for item in include):
             actual_posts.append(post)
-    for item in exclude:
-        for post in actual_posts:
-            if item in post.tags:
-                actual_posts.remove(post)
+    posts = []
+    for post in actual_posts:
+        allowed = True
+        for item in exclude:
+            allowed = allowed and item not in post.tags
+        if allowed:
+            posts.append(post)
 
-    posts = list(OrderedSet(actual_posts))
+    posts = list(OrderedSet(posts))
 
     # do pagination
     posts = list(split_into(COLUMNS, posts))
