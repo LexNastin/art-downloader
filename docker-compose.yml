@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - data:/app/data
+    environment:
+      CONSUMER_KEY: ""
+      CONSUMER_SECRET: ""
+      OAUTH_TOKEN: ""
+      OAUTH_SECRET: ""
+
+volumes:
+  data:

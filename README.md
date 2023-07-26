@@ -6,7 +6,13 @@ A nice little web-based downloader and viewer for art you find on the internet. 
 
 ### Docker
 
-TBA
+Make sure you have Docker installed. Edit ports in `docker-compose.yml` and environment variables as needed. You may set the SECRET_KEY variable to something very secure if you wish for logins to persist whenever the container restarts.
+
+Now, to start the container, simply run the following:
+
+```sh
+docker compose up -d --build
+```
 
 ### Manual
 
@@ -27,7 +33,9 @@ python3 main.py
 
 From there everything should make sense (hopefully). Be sure to report any bugs!
 
-For Tumblr to work, you must set the following 4 environment variables (you can create a `.env` file on the repo root directory to use them). Read the [Create a client](https://github.com/tumblr/pytumblr#create-a-client) section of the PyTumblr library, which explains methods to obtain those tokens.
+## Making Tumblr Work
+
+For Tumblr to work, you must set the following 4 environment variables. Read the [Create a client](https://github.com/tumblr/pytumblr#create-a-client) section of the PyTumblr library, which explains methods to obtain those tokens.
 
 ```env
 CONSUMER_KEY = <consumer key>
