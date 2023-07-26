@@ -132,7 +132,7 @@ def index():
     # do pagination
     posts = list(split_into(COLUMNS, posts))
     posts = list(start_bal_split_into(ROWS, posts))
-    pages = len(posts) or 1
+    pages = len(posts)
 
     if page < pages:
         posts = posts[page]
@@ -144,7 +144,7 @@ def index():
         get_thumbnail=get_thumbnail,
         strftime=strftime,
         tags=tags,
-        pages=pages,
+        pages=pages or 1,
         page=page,
         include=include,
         exclude=exclude

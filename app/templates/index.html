@@ -143,7 +143,7 @@
 </div>
 {{ pagination }}
 {% if not posts %}
-<p>It's kinda empty here... you should go <a href="{{ url_for('main.add') }}">add some posts</a>!</p>
+<p class="has-text-centered">It's kinda empty here... you should go <a href="{{ url_for('main.add') }}">add some posts</a>!</p>
 {% endif %}
 {% for column in posts %}
 <div class="column is-8 is-offset-2">

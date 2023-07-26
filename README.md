@@ -8,7 +8,7 @@ A nice little web-based downloader and viewer for art you find on the internet. 
 
 TBA
 
-### Manual / Development
+### Manual
 
 To begin, clone this repo:
 ```sh
@@ -22,7 +22,7 @@ pip3 install -r requirements.txt
 
 And run the program
 ```sh
-flask run
+python3 main.py
 ```
 
 From there everything should make sense (hopefully). Be sure to report any bugs!
