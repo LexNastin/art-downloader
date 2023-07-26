@@ -10,6 +10,7 @@ services:
       CONSUMER_SECRET: ""
       OAUTH_TOKEN: ""
       OAUTH_SECRET: ""
+    restart: unless-stopped
 
 volumes:
   data:
