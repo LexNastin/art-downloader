@@ -122,7 +122,7 @@ def index():
     # do pagination
     posts = list(split_into(COLUMNS, posts))
     posts = list(start_bal_split_into(ROWS, posts))
-    pages = len(posts)
+    pages = len(posts) or 1
 
     if page < pages:
         posts = posts[page]
@@ -135,6 +135,7 @@ def index():
         strftime=strftime,
         tags=tags,
         pages=pages,
+        page=page,
         include=include,
         exclude=exclude
     )
