@@ -52,6 +52,16 @@ def admin_only(func):
             return redirect(url_for("main.index"))
     return wrapper
 
+# login required only if settings say it is
+def login_maybe(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if int(get_setting("login_required", "1")) and not current_user.is_authenticated:
+            return redirect(url_for("auth.login"))
+        else:
+            return func(*args, **kwargs)
+    return wrapper
+
 def strftime(timestamp):
     return dt.fromtimestamp(timestamp).strftime("%d %b %Y - %H:%M:%S")
 
@@ -94,7 +104,7 @@ def get_stats():
 
 # main website ui
 @main.route("/")
-@login_required
+@login_maybe
 def index():
     page = int(request.args.get("page") or "1") - 1
     posts = get_all_posts()
@@ -142,7 +152,7 @@ def index():
 
 # post viewing path
 @main.route("/post/<post_ts>")
-@login_required
+@login_maybe
 def post(post_ts):
     if post_ts.isdigit():
         post_ts = int(post_ts)
@@ -539,12 +549,14 @@ def media_delete():
 @login_required
 def settings():
     allow_signups = int(get_setting("allow_signups", "1"))
+    login_required = int(get_setting("login_required", "1"))
     twitter_cookie = get_setting("twitter_cookie", "")
     users = [user.username for user in User.query.all()]
     users.remove(current_user.username)
     return render_template(
         "settings.html",
         allow_signups=allow_signups,
+        login_required=login_required,
         twitter_cookie=twitter_cookie,
         users=users,
         stats=get_stats()
@@ -556,12 +568,15 @@ def settings():
 def settings_post():
     allow_signups = request.form.get("allow_signups")
     allow_signups = "1" if allow_signups == "on" else "0"
+    login_required = request.form.get("login_required")
+    login_required = "1" if login_required == "on" else "0"
     app_name = request.form.get("app_name") 
     app_name = app_name or get_setting("app_name", "Art Downloader")
     twitter_cookie = request.form.get("twitter_cookie") 
     twitter_cookie = twitter_cookie or get_setting("twitter_cookie", "")
 
     set_setting("allow_signups", allow_signups)
+    set_setting("login_required", login_required)
     set_setting("app_name", app_name)
     set_setting("twitter_cookie", twitter_cookie)
     media_manager.twitter_manager.set_cookie(twitter_cookie)
@@ -676,18 +691,18 @@ def indiv_user_settings_post(username):
     return redirect(url_for("main.user", username=new_username or username))
 
 # preview paths
-@main.route("/media/<path>")
-@login_required
+@main.route("/media/<path:path>")
+@login_maybe
 def serve_media(path):
     return send_from_directory(MEDIA_DIR, path)
 
 @main.route("/thumb/<path>")
-@login_required
+@login_maybe
 def serve_thumbnail(path):
     thumb_dir = os.path.join(DATA_DIR, "thumbnails")
     return send_from_directory(thumb_dir, path)
 
-@main.route("/temp/<path>")
+@main.route("/temp/<path:path>")
 @login_required
 @admin_only
 def serve_temp(path):
