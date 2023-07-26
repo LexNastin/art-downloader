@@ -35,3 +35,7 @@ CONSUMER_SECRET = <consumer secret>
 OAUTH_TOKEN = <oauth token>
 OAUTH_SECRET = <oauth secret>
 ```
+
+## Making Twitter Work
+
+Go to Twitter and login (you can create an account for the sole purpose of this program). Now open the F12 menu and go to the `Network` tab. Refresh the page, and look at the first request. Go to the `Headers` tab on that request, and scroll down until you see the `Cookie` header. Copy the cookie, and go to the settings of the Art Downloader. There you should find a Twitter Cookie setting. Paste your cookie there and save. Twitter uploads should now work :D.
