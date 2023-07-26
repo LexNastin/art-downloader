@@ -92,8 +92,7 @@
             <br>
             <div class="columns is-mobile">
               <div class="column">
-                <!-- wronggggg (url) -->
-                <a href="/edit?ts={{ post.timestamp }}" class="button is-link is-fullwidth">
+                <a href="{{ url_for('main.edit', post_ts=post.timestamp) }}" class="button is-link is-fullwidth">
                   <span class="icon">
                     <i class="fas fa-pencil"></i>
                   </span>

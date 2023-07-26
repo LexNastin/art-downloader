@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+  .control-buttons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    let datetime = document.getElementById("datetime")
+    let now = new Date()
+    let y = now.getFullYear().toString().padStart(4, "0")
+    let m = (now.getMonth()+1).toString().padStart(2, "0")
+    let d = now.getDate().toString().padStart(2, "0")
+    let H = now.getHours().toString().padStart(2, "0")
+    let M = now.getMinutes().toString().padStart(2, "0")
+    let S = now.getSeconds().toString().padStart(2, "0")
+    let value = `${y}-${m}-${d}T${H}:${M}:${S}`
+    if (!datetime.value) datetime.value = value
+
+    const session_id = "{{ session_id }}"
+    let files = document.getElementById("files")
+    let upload_social = document.getElementById("upload_social")
+
+    function create_control_buttons(file_name) {
+      let container = document.createElement("div")
+      container.classList.add("control-buttons", "buttons", "are-small")
+
+      let up_button = document.createElement("button")
+      let down_button = document.createElement("button")
+      let delete_button = document.createElement("button")
+
+      up_button.classList.add("button", "is-info", "is-rounded")
+      down_button.classList.add("button", "is-info", "is-rounded")
+      delete_button.classList.add("button", "is-danger", "is-rounded")
+
+      up_button.addEventListener("click", handle_up)
+      up_button.type = "button"
+      down_button.addEventListener("click", handle_down)
+      down_button.type = "button"
+      delete_button.addEventListener("click", handle_delete)
+      delete_button.type = "button"
+      
+      let arrow_up = document.createElement("i")
+      let arrow_down = document.createElement("i")
+      let trash = document.createElement("i")
+
+      arrow_up.classList.add("fas", "fa-arrow-up")
+      arrow_down.classList.add("fas", "fa-arrow-down")
+      trash.classList.add("fas", "fa-trash")
+      
+      up_button.appendChild(arrow_up)
+      down_button.appendChild(arrow_down)
+      delete_button.appendChild(trash)
+
+      container.appendChild(up_button)
+      container.appendChild(down_button)
+      container.appendChild(delete_button)
+
+      return container
+    }
+
+    function remove_preview(file_name) {
+      let elements = document.querySelectorAll(`[data-file="${file_name}"]`)
+      elements.forEach(item => {
+        item.remove()
+      })
+    }
+
+    function handle_up(event) {
+      let curr = event.currentTarget.parentElement.parentElement
+      let prev = curr.previousElementSibling
+      fetch(`/media_up?id=${session_id}`, {
+        method: "POST",
+        body: curr.dataset["file"]
+      }).then(() => {
+        if (prev) {
+          prev.before(curr)
+
+          let f1_num = curr.dataset["file"].split(".")[0]
+          let f2_num = prev.dataset["file"].split(".")[0]
+          let f1_ext = curr.dataset["file"].split(".")[1]
+          let f2_ext = prev.dataset["file"].split(".")[1]
+
+          curr.dataset["file"] = `${f2_num}.${f1_ext}`
+          prev.dataset["file"] = `${f1_num}.${f2_ext}`
+
+          curr.children[0].src = `/temp/${session_id}/${curr.dataset["file"]}?cache-break=${Date.now()}`
+          prev.children[0].src = `/temp/${session_id}/${prev.dataset["file"]}?cache-break=${Date.now()}`
+        }
+      })
+    }
+
+    function handle_down(event) {
+      let curr = event.currentTarget.parentElement.parentElement
+      let next = curr.nextElementSibling
+      fetch(`/media_down?id=${session_id}`, {
+        method: "POST",
+        body: curr.dataset["file"]
+      }).then(() => {
+        if (next) {
+          next.after(curr)
+
+          let f1_num = curr.dataset["file"].split(".")[0]
+          let f2_num = next.dataset["file"].split(".")[0]
+          let f1_ext = curr.dataset["file"].split(".")[1]
+          let f2_ext = next.dataset["file"].split(".")[1]
+
+          curr.dataset["file"] = `${f2_num}.${f1_ext}`
+          next.dataset["file"] = `${f1_num}.${f2_ext}`
+
+          curr.children[0].src = `/temp/${session_id}/${curr.dataset["file"]}?cache-break=${Date.now()}`
+          next.children[0].src = `/temp/${session_id}/${next.dataset["file"]}?cache-break=${Date.now()}`
+        }
+      })
+    }
+
+    function handle_delete(event) {
+      fetch(`/media_delete?id=${session_id}`, {
+        method: "POST",
+        body: event.currentTarget.parentElement.parentElement.dataset["file"]
+      }).then(async response => {
+        let file_name = await response.text()
+        remove_preview(file_name)
+      })
+    }
+
+    async function preview_files(response) {
+      let added_files = response["files"]
+      let files_div = document.getElementById("files-preview")
+
+      added_files.forEach(file => {
+        let location = file["location"]
+        let type = file["type"]
+        let file_name = file["file"]
+
+        let new_container = document.createElement("div")
+        new_container.classList.add("image")
+        new_container.dataset["file"] = file_name
+        if (type == "image") {
+          let new_img = document.createElement("img")
+          new_img.src = location + `?cache-break=${Date.now()}`
+          new_img.classList.add("image", "is-fullwidth")
+          new_container.appendChild(new_img)
+        } else {
+          let new_video = document.createElement("video")
+          new_video.src = location + `?cache-break=${Date.now()}`
+          new_video.style.display = "block"
+          new_video.controls = true
+          new_video.classList.add("image", "is-fullwidth")
+          new_container.appendChild(new_video)
+        }
+        new_container.appendChild(create_control_buttons(file_name))
+        files_div.appendChild(new_container)
+      })
+    }
+
+    files.addEventListener("change", event => {
+      let files = [...event.currentTarget.files]
+      let target = event.currentTarget
+      let icons = [...document.getElementsByClassName(".fa-upload")]
+      target.disabled = true
+      icons.forEach(icon => {
+        icon.classList.add("fa-beat")
+      })
+      let data = new FormData()
+      files.forEach((file, index) => {
+        data.append(`file-${index}`, file)
+      })
+      fetch(`/upload?id=${session_id}`, {
+        method: "POST",
+        body: data
+      }).then(async (response) => {
+        target.disabled = false
+        icons.forEach(icon => {
+          icon.classList.remove("fa-beat")
+        })
+        response = await response.json()
+        await preview_files(response)
+      })
+      event.target.value = ""
+    })
+
+    function flash(message) {
+      // implement flashin code
+      let flashes = document.getElementById("flashes")
+      flashes.innerText = ""
+      if (message) {
+        let new_flash = document.createElement("div")
+        new_flash.classList.add("notification", "is-danger")
+        new_flash.innerText = message
+        flashes.appendChild(new_flash)
+      }
+    }
+
+    upload_social.addEventListener("click", event => {
+      let target = event.currentTarget
+      target.disabled = true
+      target.classList.add("is-loading")
+      let url = document.getElementById("social_url").value
+      fetch(`/upload_social?id=${session_id}`, {
+        method: "POST",
+        body: url
+      }).then(async (response) => {
+        target.disabled = false
+        target.classList.remove("is-loading")
+        response = await response.json()
+        switch (response["response"]) {
+          case "success":
+            flash()
+            await preview_files(response)
+            break
+          case "incomplete":
+            flash("This may be the incomplete response")
+            await preview_files(response)
+            break
+          case "failed":
+            flash(response["message"])
+            break
+          case "removed":
+            flash("This post has been removed")
+            break
+          case "unsupported":
+            flash("This post is unsupported")
+            break
+          case "rate_limited":
+            flash(`We're being rate limited by this service for ${response["time"]}s more`)
+            break
+        }
+      })
+    })
+    
+    let up_buttons = [...document.getElementsByClassName("up-button")]
+    let down_buttons = [...document.getElementsByClassName("down-button")]
+    let delete_buttons = [...document.getElementsByClassName("delete-button")]
+
+    up_buttons.forEach(elem => {
+      elem.classList.remove("up-button")
+      elem.addEventListener("click", handle_up)
+    })
+
+    down_buttons.forEach(elem => {
+      elem.classList.remove("down-button")
+      elem.addEventListener("click", handle_down)
+    })
+
+    delete_buttons.forEach(elem => {
+      elem.classList.remove("delete-button")
+      elem.addEventListener("click", handle_delete)
+    })
+  })
+</script>
+
+<div class="column is-8 is-offset-2 is-6-desktop is-offset-3-desktop is-4-widescreen is-offset-4-widescreen">
+  <div class="box">
+    <h1 class="title">Edit Post</h1>
+    {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+      <div class="notification is-danger">
+          {{ message }}
+      </div>
+    {% endfor %}
+    {% endwith %}
+    <div id="flashes">
+
+    </div>
+    <form method="POST" action="{{ url_for('main.edit', post_ts=ts) }}">
+      <div class="field">
+        <label class="label">Date/Time</label>
+        <div class="control">
+          <input id="datetime" class="input" type="datetime-local" name="datetime" step=1 value="{{ datetime }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Source</label>
+        <div class="control">
+          <input class="input" type="text" name="source" value="{{ source }}">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Tags (comma separated)</label>
+        <div class="control">
+          <input class="input" type="text" name="tags" value="{{ tags }}">
+        </div>
+      </div>
+
+      <label class="label">Upload from the internet</label>
+      <div class="field has-addons">
+        <div style="width: 100%" class="control">
+          <input class="input" type="text" id="social_url">
+        </div>
+
+        <div class="control">
+          <button class="button" type="button" id="upload_social">Upload</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="control">
+          <div class="file">
+            <label class="file-label">
+              <div class="file-cta">
+                <input id="files" class="file-input" type="file" multiple>
+                <span class="file-icon">
+                  <i class="fas fa-upload"></i>
+                </span>
+                <span class="file-label">
+                  Choose image(s)
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="files-preview" class="field">
+        {% if files %}
+        {% for file in files %}
+          <div class="image" data-file="{{ file["file"] }}">
+            {% if file["type"] == "image" %}
+            <img class="image is-fullwidth" src="{{ file["location"] }}">
+            {% else %}
+            <video class="image is-fullwidth" style="display: block" src="{{ file["location"] }}" controls></video>
+            {% endif %}
+            <div class="control-buttons buttons are-small">
+              <button type="button" class="button is-info is-rounded up-button">
+                <i class="fas fa-arrow-up"></i>
+              </button><!--
+           --><button type="button" class="button is-info is-rounded down-button">
+                <i class="fas fa-arrow-down"></i>
+              </button><!--
+           --><button type="button" class="button is-danger is-rounded delete-button">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+        {% endif %}
+      </div>
+
+      <input type="text" name="session_id" value="{{ session_id }}" hidden>
+      <button class="button is-fullwidth is-link">
+        <strong>Save Post</strong>
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

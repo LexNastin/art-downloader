@@ -6,7 +6,7 @@ from werkzeug.security import safe_join, generate_password_hash
 from flask_login import current_user, login_required, logout_user
 from .models import User
 from .thumbnails import THUMBNAIL_DIR, gen_thumbnail, get_thumbnail
-from .posts import delete_post, get_all_posts, get_post, new_post, Response
+from .posts import delete_post, get_all_posts, get_post, new_post, Response, update_post
 from . import media_manager
 from .media_manager import Response as MResponse
 from . import DATA_DIR, MEDIA_DIR, TEMP_DIR, db
@@ -186,7 +186,6 @@ def add_post():
 
     if not datetime:
         flash("Date/time can't be empty")
-        print(session_id)
         return render_template("add.html", source=source, tags=tags, session_id=session_id, files=files)
     datetime = dt.fromisoformat(datetime)
     datetime = round(dt.timestamp(datetime))
@@ -208,7 +207,7 @@ def add_post():
     response = new_post(datetime, source=source, tags=split_tags)
     if response["response"] == Response.FAILED:
         flash(response["message"])
-        return render_template("add.html", datetime=datetime, source=source, tags=tags, session_id=session_id, files=files)
+        return render_template("add.html", datetime=request.form.get("datetime"), source=source, tags=tags, session_id=session_id, files=files)
     gen_thumbnail(str(datetime))
 
     return redirect(url_for("main.index"))
@@ -221,6 +220,10 @@ def delete(post_ts):
     if post_ts.isdigit():
         post_ts = int(post_ts)
     post = get_post(post_ts)
+    post = get_post(post_ts)
+    if not post:
+        flash("Post not found")
+        return redirect("main.index")
     if os.path.exists(safe_join(MEDIA_DIR, str(post_ts))):
         shutil.rmtree(safe_join(MEDIA_DIR, str(post_ts)))
     if os.path.exists(safe_join(THUMBNAIL_DIR, f"{post_ts}.webp")):
@@ -228,6 +231,97 @@ def delete(post_ts):
     result = delete_post(post_ts)
     if result["response"] == Response.FAILED:
         flash(result["message"])
+    return redirect(url_for("main.index"))
+
+@main.route("/post/<path:post_ts>/edit")
+@login_required
+@admin_only
+def edit(post_ts):
+    session_id = get_random()
+    if post_ts.isdigit():
+        post_ts = int(post_ts)
+    post = get_post(post_ts)
+    if not post:
+        flash("Post not found")
+        return redirect("main.index")
+    post_dir = safe_join(MEDIA_DIR, str(post_ts))
+    files = []
+    if os.path.exists(post_dir):
+        for file in os.listdir(post_dir):
+            files.append({
+                "location": f"/temp/{session_id}/{file}",
+                "type": mimetypes.guess_type(file)[0].split("/")[0],
+                "file": file
+            })
+    files.sort(key=lambda x: int( x["file"].split(".")[0] ))
+
+    temp_post_dir = safe_join(TEMP_DIR, session_id)
+    if files:
+        if os.path.exists(temp_post_dir):
+            shutil.rmtree(temp_post_dir, ignore_errors=True)
+        os.makedirs(temp_post_dir, exist_ok=True)
+        for file in files:
+            old_file_path = safe_join(post_dir, file["file"])
+            new_file_path = safe_join(temp_post_dir, file["file"])
+            shutil.copy(old_file_path, new_file_path)
+    datetime = dt.fromtimestamp(post_ts).isoformat()
+    return render_template("edit.html", datetime=datetime, source=post.source, tags=", ".join(post.tags), session_id=session_id, files=files, ts=post.timestamp)
+
+@main.route("/post/<path:post_ts>/edit", methods=["POST"])
+@login_required
+@admin_only
+def edit_post(post_ts):
+    if post_ts.isdigit():
+        post_ts = int(post_ts)
+    datetime = request.form.get("datetime")
+    source = request.form.get("source") or ""
+    tags = request.form.get("tags") or ""
+    session_id = request.form.get("session_id") or get_random()
+
+    split_tags = [tag.strip() for tag in tags.split(",")]
+    split_tags.sort()
+    if len(split_tags) == 1 and split_tags[0] == "":
+        split_tags = []
+
+    temp_post_dir = safe_join(TEMP_DIR, session_id)
+    temp_post_dir_exists = os.path.exists(temp_post_dir)
+    files = []
+    if temp_post_dir_exists:
+        for file in os.listdir(safe_join(TEMP_DIR, session_id)):
+            files.append({
+                "location": f"/temp/{session_id}/{file}",
+                "type": mimetypes.guess_type(file)[0].split("/")[0],
+                "file": file
+            })
+    files.sort(key=lambda x: int( x["file"].split(".")[0] ))
+
+    if not datetime:
+        flash("Date/time can't be empty")
+        return render_template("edit.html", source=source, tags=tags, session_id=session_id, files=files, ts=post_ts)
+    datetime = dt.fromisoformat(datetime)
+    datetime = round(dt.timestamp(datetime))
+
+    response = update_post(post_ts, new_timestamp=datetime, source=source, tags=split_tags)
+    if response["response"] == Response.FAILED:
+        flash(response["message"])
+        return render_template("edit.html", datetime=request.form.get("datetime"), source=source, tags=tags, session_id=session_id, files=files, ts=post_ts)
+
+    new_post_dir = safe_join(MEDIA_DIR, str(datetime))
+    if files:
+        if os.path.exists(new_post_dir):
+            shutil.rmtree(new_post_dir, ignore_errors=True)
+        os.makedirs(new_post_dir, exist_ok=True)
+        for index, file in enumerate(files):
+            old_file = file["file"]
+            old_file_ext = old_file.split(".")[-1]
+            new_file = f"{index}.{old_file_ext}"
+            old_file_path = safe_join(temp_post_dir, old_file)
+            new_file_path = safe_join(new_post_dir, new_file)
+            shutil.move(old_file_path, new_file_path)
+    if temp_post_dir_exists:
+        os.rmdir(temp_post_dir)
+    gen_thumbnail(str(datetime))
+
     return redirect(url_for("main.index"))
 
 # media upload/generation paths

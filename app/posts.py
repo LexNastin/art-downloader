@@ -58,7 +58,7 @@ def delete_post(timestamp):
         "response": Response.SUCCESS
     }
 
-def update_post(timestamp, new_timestamp=None,source=None, tags=None):
+def update_post(timestamp, new_timestamp=None, source=None, tags=None):
     post = Post.query.filter_by(timestamp=timestamp).first()
 
     if new_timestamp and timestamp != new_timestamp:
