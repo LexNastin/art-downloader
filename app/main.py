@@ -20,6 +20,9 @@ import json
 
 main = Blueprint("main", __name__)
 
+ROWS = 10
+COLUMNS = 3
+
 # get random id for uploads
 def get_random():
     random = os.urandom(5).hex()
@@ -28,9 +31,14 @@ def get_random():
 # stolen from SO
 # function to split array into array of arrays of size n
 def split_into(n, arr):
-    if len(arr) % 3:
-        yield arr[:len(arr) % 3]
-    for i in range(len(arr) % 3, len(arr), n):
+    if len(arr) % n:
+        yield arr[:len(arr) % n]
+    for i in range(len(arr) % n, len(arr), n):
+        yield arr[i:i+n]
+
+# previous function but start balanced where beginning will get more items than end
+def start_bal_split_into(n, arr):
+    for i in range(0, len(arr), n):
         yield arr[i:i+n]
 
 # decorator to limit access to admins
@@ -88,20 +96,13 @@ def get_stats():
 @main.route("/")
 @login_required
 def index():
+    page = int(request.args.get("page") or "1") - 1
     posts = get_all_posts()
-    return render_template("index.html",
-        posts=list(split_into(3, posts)),
-        get_thumbnail=get_thumbnail,
-        strftime=strftime,
-        tags=sorted(get_all_tags(posts))
-    )
+    tags = sorted(get_all_tags(posts))
 
-# filtered af posts
-@main.route("/", methods=["POST"])
-@login_required
-def index_filtered():
-    include = json.loads(request.form.get("include"))
-    exclude = json.loads(request.form.get("exclude"))
+    # filter stuff
+    include = json.loads(request.args.get("include") or "[]")
+    exclude = json.loads(request.args.get("exclude") or "[]")
     posts = get_all_posts()
     actual_posts = []
 
@@ -116,20 +117,30 @@ def index_filtered():
             if item in post.tags:
                 actual_posts.remove(post)
 
-    actual_posts = list(OrderedSet(actual_posts))
+    posts = list(OrderedSet(actual_posts))
 
+    # do pagination
+    posts = list(split_into(COLUMNS, posts))
+    posts = list(start_bal_split_into(ROWS, posts))
+    pages = len(posts)
+
+    if page < pages:
+        posts = posts[page]
+    else:
+        posts = []
     return render_template(
         "index.html",
-        posts=list(split_into(3, actual_posts)),
+        posts=posts,
         get_thumbnail=get_thumbnail,
         strftime=strftime,
-        tags=sorted(get_all_tags(posts)),
+        tags=tags,
+        pages=pages,
         include=include,
         exclude=exclude
     )
 
 # post viewing path
-@main.route("/post/<path:post_ts>")
+@main.route("/post/<post_ts>")
 @login_required
 def post(post_ts):
     if post_ts.isdigit():
@@ -149,14 +160,22 @@ def post(post_ts):
             })
     if not media and post:
         flash("Media not found")
-    return render_template("post.html", post=post, media=media, strftime=strftime)
+    return render_template(
+        "post.html",
+        post=post,
+        media=media,
+        strftime=strftime
+    )
 
 # post adding paths
 @main.route("/add")
 @login_required
 @admin_only
 def add():
-    return render_template("add.html", session_id=get_random())
+    return render_template(
+        "add.html",
+        session_id=get_random()
+    )
 
 @main.route("/add", methods=["POST"])
 @login_required
@@ -186,7 +205,13 @@ def add_post():
 
     if not datetime:
         flash("Date/time can't be empty")
-        return render_template("add.html", source=source, tags=tags, session_id=session_id, files=files)
+        return render_template(
+            "add.html",
+            source=source,
+            tags=tags,
+            session_id=session_id,
+            files=files
+        )
     datetime = dt.fromisoformat(datetime)
     datetime = round(dt.timestamp(datetime))
 
@@ -207,13 +232,20 @@ def add_post():
     response = new_post(datetime, source=source, tags=split_tags)
     if response["response"] == Response.FAILED:
         flash(response["message"])
-        return render_template("add.html", datetime=request.form.get("datetime"), source=source, tags=tags, session_id=session_id, files=files)
+        return render_template(
+            "add.html",
+            datetime=request.form.get("datetime"),
+            source=source,
+            tags=tags,
+            session_id=session_id,
+            files=files
+        )
     gen_thumbnail(str(datetime))
 
     return redirect(url_for("main.index"))
 
 # post manipulation paths
-@main.route("/post/<path:post_ts>/delete", methods=["POST"])
+@main.route("/post/<post_ts>/delete", methods=["POST"])
 @login_required
 @admin_only
 def delete(post_ts):
@@ -233,7 +265,7 @@ def delete(post_ts):
         flash(result["message"])
     return redirect(url_for("main.index"))
 
-@main.route("/post/<path:post_ts>/edit")
+@main.route("/post/<post_ts>/edit")
 @login_required
 @admin_only
 def edit(post_ts):
@@ -265,9 +297,17 @@ def edit(post_ts):
             new_file_path = safe_join(temp_post_dir, file["file"])
             shutil.copy(old_file_path, new_file_path)
     datetime = dt.fromtimestamp(post_ts).isoformat()
-    return render_template("edit.html", datetime=datetime, source=post.source, tags=", ".join(post.tags), session_id=session_id, files=files, ts=post.timestamp)
+    return render_template(
+        "edit.html",
+        datetime=datetime,
+        source=post.source,
+        tags=", ".join(post.tags),
+        session_id=session_id,
+        files=files,
+        ts=post.timestamp
+    )
 
-@main.route("/post/<path:post_ts>/edit", methods=["POST"])
+@main.route("/post/<post_ts>/edit", methods=["POST"])
 @login_required
 @admin_only
 def edit_post(post_ts):
@@ -297,14 +337,29 @@ def edit_post(post_ts):
 
     if not datetime:
         flash("Date/time can't be empty")
-        return render_template("edit.html", source=source, tags=tags, session_id=session_id, files=files, ts=post_ts)
+        return render_template(
+            "edit.html",
+            source=source,
+            tags=tags,
+            session_id=session_id,
+            files=files,
+            ts=post_ts
+        )
     datetime = dt.fromisoformat(datetime)
     datetime = round(dt.timestamp(datetime))
 
     response = update_post(post_ts, new_timestamp=datetime, source=source, tags=split_tags)
     if response["response"] == Response.FAILED:
         flash(response["message"])
-        return render_template("edit.html", datetime=request.form.get("datetime"), source=source, tags=tags, session_id=session_id, files=files, ts=post_ts)
+        return render_template(
+            "edit.html",
+            datetime=request.form.get("datetime"),
+            source=source,
+            tags=tags,
+            session_id=session_id,
+            files=files,
+            ts=post_ts
+        )
 
     new_post_dir = safe_join(MEDIA_DIR, str(datetime))
     if files:
@@ -486,7 +541,13 @@ def settings():
     twitter_cookie = get_setting("twitter_cookie", "")
     users = [user.username for user in User.query.all()]
     users.remove(current_user.username)
-    return render_template("settings.html", allow_signups=allow_signups, twitter_cookie=twitter_cookie, users=users, stats=get_stats())
+    return render_template(
+        "settings.html",
+        allow_signups=allow_signups,
+        twitter_cookie=twitter_cookie,
+        users=users,
+        stats=get_stats()
+    )
 
 @main.route("/settings", methods=["POST"])
 @login_required
@@ -543,7 +604,7 @@ def delete_own_account():
     logout_user()
     return redirect(url_for("auth.login"))
 
-@main.route("/user/<path:username>")
+@main.route("/user/<username>")
 @login_required
 @admin_only
 def user(username):
@@ -557,9 +618,13 @@ def user(username):
         flash("Can't open that page on yourself!")
         return redirect(url_for("main.settings"))
 
-    return render_template("user.html", username=username, admin=user.admin)
+    return render_template(
+        "user.html",
+        username=username,
+        admin=user.admin
+    )
 
-@main.route("/user/<path:username>/delete_account", methods=["POST"])
+@main.route("/user/<username>/delete_account", methods=["POST"])
 @login_required
 @admin_only
 def delete_account(username):
@@ -579,7 +644,7 @@ def delete_account(username):
     return redirect(url_for("main.settings"))
 
 # user setting paths
-@main.route("/user/<path:username>/user_settings", methods=["POST"])
+@main.route("/user/<username>/user_settings", methods=["POST"])
 @login_required
 @admin_only
 def indiv_user_settings_post(username):
@@ -610,18 +675,18 @@ def indiv_user_settings_post(username):
     return redirect(url_for("main.user", username=new_username or username))
 
 # preview paths
-@main.route("/media/<path:path>")
+@main.route("/media/<path>")
 @login_required
 def serve_media(path):
     return send_from_directory(MEDIA_DIR, path)
 
-@main.route("/thumb/<path:path>")
+@main.route("/thumb/<path>")
 @login_required
 def serve_thumbnail(path):
     thumb_dir = os.path.join(DATA_DIR, "thumbnails")
     return send_from_directory(thumb_dir, path)
 
-@main.route("/temp/<path:path>")
+@main.route("/temp/<path>")
 @login_required
 @admin_only
 def serve_temp(path):
