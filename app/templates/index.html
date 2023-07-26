@@ -1,5 +1,41 @@
 {% extends "base.html" %}
 
+{% set pagination %}
+<div class="column is-8 is-offset-2">
+    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+        <a class="pagination-previous" href="{{ request.path }}?page={{ page or 1 }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">Previous</a>
+        <ul class="pagination-list">
+            {% if pages <= 6 %}
+            {% for page_nr in range(pages) %}
+            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1 }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
+            {% endfor %}
+            {% else %}
+            <li><a class="pagination-link {{ 'is-current' if 0 == page else '' }}" href="{{ request.path }}?page=1{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">1</a></li>
+            {% if page < 3 %}
+            {% for page_nr in range(1, 4) %}
+            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1}}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
+            {% endfor %}
+            <li><span class="pagination-ellipsis">&hellip;</span></li>
+            {% elif page >= pages - 3 %}
+            <li><span class="pagination-ellipsis">&hellip;</span></li>
+            {% for page_nr in range(pages - 4, pages - 1) %}
+            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1}}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
+            {% endfor %}
+            {% else %}
+            <li><span class="pagination-ellipsis">&hellip;</span></li>
+            {% for page_nr in range(page - 1, page + 2) %}
+            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1}}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
+            {% endfor %}
+            <li><span class="pagination-ellipsis">&hellip;</span></li>
+            {% endif %}
+            <li><a class="pagination-link {{ 'is-current' if pages == page + 1 else '' }}" href="{{ request.path }}?page={{ pages }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ pages }}</a></li>
+            {% endif %}
+        </ul>
+        <a class="pagination-next" href="{{ request.path }}?page={{ page + 2 if pages - 1 != page else page + 1 }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">Next page</a>
+    </nav>
+</div>
+{% endset %}
+
 {% block content %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -105,46 +141,7 @@
     </div>
   </div>
 </div>
-<div class="column is-8 is-offset-2">
-    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
-        <a class="pagination-previous" href="{{ request.path }}?page={{ page or 1 }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">Previous</a>
-        <ul class="pagination-list">
-            {% if pages <= 6 %}
-            {% for page_nr in range(pages) %}
-            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1 }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
-            {% endfor %}
-            {% else %}
-            <li><a class="pagination-link {{ 'is-current' if 0 == page else '' }}" href="{{ request.path }}?page=1{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">1</a></li>
-            {% if page < 3 %}
-            {% for page_nr in range(1, 4) %}
-            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1}}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
-            {% endfor %}
-            <li><span class="pagination-ellipsis">&hellip;</span></li>
-            {% elif page >= pages - 3 %}
-            <li><span class="pagination-ellipsis">&hellip;</span></li>
-            {% for page_nr in range(pages - 4, pages - 1) %}
-            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1}}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
-            {% endfor %}
-            {% else %}
-            <li><span class="pagination-ellipsis">&hellip;</span></li>
-            {% for page_nr in range(page - 1, page + 2) %}
-            <li><a class="pagination-link {{ 'is-current' if page_nr == page else '' }}" href="{{ request.path }}?page={{ page_nr + 1}}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ page_nr + 1 }}</a></li>
-            {% endfor %}
-            <li><span class="pagination-ellipsis">&hellip;</span></li>
-            {% endif %}
-            <li><a class="pagination-link {{ 'is-current' if pages == page + 1 else '' }}" href="{{ request.path }}?page={{ pages }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">{{ pages }}</a></li>
-            {% endif %}
-            <!-- <li><a class="pagination-link" aria-label="Goto page 1">1</a></li> -->
-            <!-- <li><span class="pagination-ellipsis">&hellip;</span></li> -->
-            <!-- <li><a class="pagination-link" aria-label="Goto page 45">45</a></li> -->
-            <!-- <li><a class="pagination-link is-current" aria-label="Page 46" aria-current="page">46</a></li> -->
-            <!-- <li><a class="pagination-link" aria-label="Goto page 47">47</a></li> -->
-            <!-- <li><span class="pagination-ellipsis">&hellip;</span></li> -->
-            <!-- <li><a class="pagination-link" aria-label="Goto page 86">86</a></li> -->
-        </ul>
-        <a class="pagination-next" href="{{ request.path }}?page={{ page + 2 if pages - 1 != page else page + 1 }}{% if request.args.get('exclude') %}&exclude={{ request.args.get('exclude') }}{% endif %}{% if request.args.get('include') %}&include={{ request.args.get('include') }}{% endif %}">Next page</a>
-    </nav>
-</div>
+{{ pagination }}
 {% if not posts %}
 <p>It's kinda empty here... you should go <a href="{{ url_for('main.add') }}">add some posts</a>!</p>
 {% endif %}
@@ -186,4 +183,5 @@
   </div>
 </div>
 {% endfor %}
+{{ pagination }}
 {% endblock %}
