@@ -1,7 +1,7 @@
 from functools import wraps
 from urllib.parse import urlparse
 from urllib.request import urlopen
-from flask import Blueprint, flash, redirect, render_template, request, send_from_directory, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.security import safe_join, generate_password_hash
 from flask_login import current_user, login_required, logout_user
 from .models import User
@@ -152,13 +152,14 @@ def index():
 
 # post viewing path
 @main.route("/post/<post_ts>")
-@login_maybe
 def post(post_ts):
     if post_ts.isdigit():
         post_ts = int(post_ts)
     post = get_post(post_ts)
     if not post:
         flash("Post not found")
+    if not post.public and int(get_setting("login_required", "1")) and not current_user.is_authenticated:
+        return redirect(url_for("auth.login"))
     post_dir = safe_join(MEDIA_DIR, str(post_ts))
     media = []
     if os.path.exists(post_dir):
@@ -195,6 +196,7 @@ def add_post():
     datetime = request.form.get("datetime")
     source = request.form.get("source") or ""
     tags = request.form.get("tags") or ""
+    public = request.form.get("public")
     session_id = request.form.get("session_id") or get_random()
 
     split_tags = [tag.strip() for tag in tags.split(",")]
@@ -221,7 +223,8 @@ def add_post():
             source=source,
             tags=tags,
             session_id=session_id,
-            files=files
+            files=files,
+            public=public
         )
     datetime = dt.fromisoformat(datetime)
     datetime = round(dt.timestamp(datetime))
@@ -240,7 +243,7 @@ def add_post():
             shutil.move(old_file_path, new_file_path)
     if temp_post_dir_exists:
         os.rmdir(temp_post_dir)
-    response = new_post(datetime, source=source, tags=split_tags)
+    response = new_post(datetime, source=source, tags=split_tags, public=public == "on")
     if response["response"] == Response.FAILED:
         flash(response["message"])
         return render_template(
@@ -249,7 +252,8 @@ def add_post():
             source=source,
             tags=tags,
             session_id=session_id,
-            files=files
+            files=files,
+            public=public
         )
     gen_thumbnail(str(datetime))
 
@@ -263,10 +267,9 @@ def delete(post_ts):
     if post_ts.isdigit():
         post_ts = int(post_ts)
     post = get_post(post_ts)
-    post = get_post(post_ts)
     if not post:
         flash("Post not found")
-        return redirect("main.index")
+        return redirect(url_for("main.index"))
     if os.path.exists(safe_join(MEDIA_DIR, str(post_ts))):
         shutil.rmtree(safe_join(MEDIA_DIR, str(post_ts)))
     if os.path.exists(safe_join(THUMBNAIL_DIR, f"{post_ts}.webp")):
@@ -286,7 +289,7 @@ def edit(post_ts):
     post = get_post(post_ts)
     if not post:
         flash("Post not found")
-        return redirect("main.index")
+        return redirect(url_for("main.index"))
     post_dir = safe_join(MEDIA_DIR, str(post_ts))
     files = []
     if os.path.exists(post_dir):
@@ -315,7 +318,8 @@ def edit(post_ts):
         tags=", ".join(post.tags),
         session_id=session_id,
         files=files,
-        ts=post.timestamp
+        ts=post.timestamp,
+        public=post.public
     )
 
 @main.route("/post/<post_ts>/edit", methods=["POST"])
@@ -327,6 +331,7 @@ def edit_post(post_ts):
     datetime = request.form.get("datetime")
     source = request.form.get("source") or ""
     tags = request.form.get("tags") or ""
+    public = request.form.get("public")
     session_id = request.form.get("session_id") or get_random()
 
     split_tags = [tag.strip() for tag in tags.split(",")]
@@ -354,12 +359,13 @@ def edit_post(post_ts):
             tags=tags,
             session_id=session_id,
             files=files,
-            ts=post_ts
+            ts=post_ts,
+            public=public
         )
     datetime = dt.fromisoformat(datetime)
     datetime = round(dt.timestamp(datetime))
 
-    response = update_post(post_ts, new_timestamp=datetime, source=source, tags=split_tags)
+    response = update_post(post_ts, new_timestamp=datetime, source=source, tags=split_tags, public=public == "on")
     if response["response"] == Response.FAILED:
         flash(response["message"])
         return render_template(
@@ -369,7 +375,8 @@ def edit_post(post_ts):
             tags=tags,
             session_id=session_id,
             files=files,
-            ts=post_ts
+            ts=post_ts,
+            public=public
         )
 
     new_post_dir = safe_join(MEDIA_DIR, str(datetime))
@@ -388,7 +395,7 @@ def edit_post(post_ts):
         os.rmdir(temp_post_dir)
     gen_thumbnail(str(datetime))
 
-    return redirect(url_for("main.index"))
+    return redirect(url_for("main.post", post_ts=datetime))
 
 # media upload/generation paths
 @main.route("/upload", methods=["POST"])
@@ -691,9 +698,14 @@ def indiv_user_settings_post(username):
     return redirect(url_for("main.user", username=new_username or username))
 
 # preview paths
-@main.route("/media/<path:path>")
-@login_maybe
-def serve_media(path):
+@main.route("/media/<post_ts>/<path>")
+def serve_media(post_ts, path):
+    post = get_post(post_ts)
+    if not post:
+        abort(404)
+    if not post.public and int(get_setting("login_required", "1")) and not current_user.is_authenticated:
+        return redirect(url_for("auth.login"))
+    path = f"{post_ts}/{path}"
     return send_from_directory(MEDIA_DIR, path)
 
 @main.route("/thumb/<path>")

@@ -84,6 +84,11 @@
             {% else %}
               <p>No source</p>
             {% endif %}
+            {% if post.public %}
+                <p><i class="far fa-eye"></i> Anyone with link can view</p>
+            {% else %}
+                <p><i class="far fa-eye-slash"></i> Only registered accounts can view</p>
+            {% endif %}
 
             <div style="margin-top: auto">
               <p>{{ strftime(post.timestamp) }}</p>

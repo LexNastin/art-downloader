@@ -172,6 +172,12 @@
               <p>No source</p>
             {% endif %}
 
+            {% if post.public %}
+                <i class="far fa-eye"></i>
+            {% else %}
+                <i class="far fa-eye-slash"></i>
+            {% endif %}
+
             <div style="margin-top: auto">
               <p>{{ strftime(post.timestamp) }}</p>
             </div>

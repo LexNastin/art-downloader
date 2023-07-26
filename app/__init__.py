@@ -2,6 +2,7 @@ from flask import Flask
 import os
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from flask_login import LoginManager
 from .media_manager import MediaManager
 
@@ -30,6 +31,7 @@ def create_app():
 
     # initialize db with app context
     db.init_app(app)
+    migrate = Migrate(app, db)
 
     # create db
     from .models import User, Post, Setting

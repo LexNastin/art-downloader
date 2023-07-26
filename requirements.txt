@@ -8,3 +8,4 @@ werkzeug==2.3.6
 pillow==9.5.0
 opencv-python==4.7.0.72
 ordered-set==4.1.0
+Flask-Migrate==4.0.4

@@ -12,6 +12,7 @@ class Post(db.Model):
     timestamp = db.Column(db.Integer, unique=True)
     source = db.Column(db.String)
     tags = db.Column(db.String)
+    public = db.Column(db.Boolean)
 
 class Setting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
