@@ -44,8 +44,12 @@ class RedditManager:
                     media = [html.unescape(list(media["variants"].values())[0]["source"]["url"])]
                 else:
                     media = [html.unescape(media["source"]["url"])]
-            elif "media_metadata" in valuable:
-                media = [item["s"] for item in valuable["media_metadata"].values()]
+            elif "media_metadata" in valuable and "gallery_data" in valuable:
+                ids = [item["media_id"] for item in valuable["gallery_data"]["items"]]
+                media = []
+                for id in ids:
+                    src = valuable["media_metadata"][id]["s"]
+                    media.append(src)
                 new_media = []
                 for value in media:
                     link = [link for link in value.values() if "http" in str(link)]
