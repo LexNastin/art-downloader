@@ -16,7 +16,22 @@ class MediaManager:
         self.twitter_manager = TwitterManager()
 
     def get_image_links(self, link):
-        if "instagram.com" in link:
+        try:
+            parsed = urlparse(link)
+            supported = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp"]
+            extension = parsed.path.split(".")[-1].lower()
+        except Exception as e:
+            return {
+                "response": Response.FAILED,
+                "message": repr(e)
+            }
+
+        if any(extension == current_ext for current_ext in supported):
+            return {
+                "response": Response.SUCCESS,
+                "links": [link]
+            }
+        elif "instagram.com" in link:
             return self.insta_manager.get_image_links(link)
         elif "reddit.com" in link:
             return self.reddit_manager.get_image_links(link)
@@ -45,21 +60,6 @@ class MediaManager:
         elif "twitter.com" in link:
             return self.twitter_manager.get_image_links(link)
         else:
-            try:
-                parsed = urlparse(link)
-                supported = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp"]
-                extension = parsed.path.split(".")[-1].lower()
-                if any(extension == current_ext for current_ext in supported):
-                    return {
-                        "response": Response.SUCCESS,
-                        "links": [link]
-                    }
-                else:
-                    return {
-                        "response": Response.UNSUPPORTED
-                    }
-            except Exception as e:
-                return {
-                    "response": Response.FAILED,
-                    "message": repr(e)
-                }
+            return {
+                "response": Response.UNSUPPORTED
+            }

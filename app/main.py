@@ -468,7 +468,13 @@ def upload_social():
             "file": new_filename
         })
         new_path = safe_join(upload_path, new_filename)
-        dl_req = urlopen(link)
+        try:
+            dl_req = urlopen(link)
+        except Exception as e:
+            return {
+                "response": "failed",
+                "message": repr(e)
+            }
         data = dl_req.read()
         with open(new_path, "wb") as output:
             output.write(data)
