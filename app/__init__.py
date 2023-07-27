@@ -44,6 +44,11 @@ def create_app():
     def inject_globals():
         return dict(app_name=get_setting("app_name", "Art Downloader"))
 
+    # setup API tokens
+    with app.app_context():
+        twitter_cookie = get_setting("twitter_cookie", "")
+        media_manager.twitter_manager.set_cookie(twitter_cookie)
+
     # setup login manager
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'

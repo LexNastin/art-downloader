@@ -444,8 +444,6 @@ def upload_social():
     media_url = request.get_data().decode("UTF-8")
     if not session_id:
         return "No session id provided", 400
-    twitter_cookie = get_setting("twitter_cookie", "")
-    media_manager.twitter_manager.set_cookie(twitter_cookie)
     response = media_manager.get_image_links(media_url)
     if response["response"] != MResponse.SUCCESS:
         return response
