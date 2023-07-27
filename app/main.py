@@ -558,13 +558,24 @@ def media_delete():
 def settings():
     allow_signups = int(get_setting("allow_signups", "1"))
     login_required = int(get_setting("login_required", "1"))
+
+    tumblr_consumer_key = get_setting("tumblr_consumer_key", "")
+    tumblr_consumer_secret = get_setting("tumblr_consumer_secret", "")
+    tumblr_oauth_secret = get_setting("tumblr_oauth_token", "")
+    tumblr_oauth_token = get_setting("tumblr_oauth_secret", "")
+
     twitter_cookie = get_setting("twitter_cookie", "")
+
     users = [user.username for user in User.query.all()]
     users.remove(current_user.username)
     return render_template(
         "settings.html",
         allow_signups=allow_signups,
         login_required=login_required,
+        tumblr_consumer_key=tumblr_consumer_key,
+        tumblr_consumer_secret=tumblr_consumer_secret,
+        tumblr_oauth_secret=tumblr_oauth_secret,
+        tumblr_oauth_token=tumblr_oauth_token,
         twitter_cookie=twitter_cookie,
         users=users,
         stats=get_stats()
@@ -576,16 +587,35 @@ def settings():
 def settings_post():
     allow_signups = request.form.get("allow_signups")
     allow_signups = "1" if allow_signups == "on" else "0"
+
     login_required = request.form.get("login_required")
     login_required = "1" if login_required == "on" else "0"
+
     app_name = request.form.get("app_name") 
-    app_name = app_name or get_setting("app_name", "Art Downloader")
+    app_name = app_name or "Art Downloader"
+
+    tumblr_consumer_key = request.form.get("tumblr_consumer_key") 
+    tumblr_consumer_key = tumblr_consumer_key or ""
+
+    tumblr_consumer_secret = request.form.get("tumblr_consumer_secret") 
+    tumblr_consumer_secret = tumblr_consumer_secret or ""
+    
+    tumblr_oauth_secret = request.form.get("tumblr_oauth_secret") 
+    tumblr_oauth_secret = tumblr_oauth_secret or ""
+
+    tumblr_oauth_token = request.form.get("tumblr_oauth_token") 
+    tumblr_oauth_token = tumblr_oauth_token or ""
+
     twitter_cookie = request.form.get("twitter_cookie") 
-    twitter_cookie = twitter_cookie or get_setting("twitter_cookie", "")
+    twitter_cookie = twitter_cookie or ""
 
     set_setting("allow_signups", allow_signups)
     set_setting("login_required", login_required)
     set_setting("app_name", app_name)
+    set_setting("tumblr_consumer_key", tumblr_consumer_key)
+    set_setting("tumblr_consumer_secret", tumblr_consumer_secret)
+    set_setting("tumblr_oauth_secret", tumblr_oauth_secret)
+    set_setting("tumblr_oauth_token", tumblr_oauth_token)
     set_setting("twitter_cookie", twitter_cookie)
     media_manager.twitter_manager.set_cookie(twitter_cookie)
     return redirect(url_for("main.settings"))

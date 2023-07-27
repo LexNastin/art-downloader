@@ -46,6 +46,25 @@ def create_app():
 
     # setup API tokens
     with app.app_context():
+        # tumblr token
+        tumblr_consumer_key = get_setting("tumblr_consumer_key", "") or os.getenv("CONSUMER_KEY") or ""
+        tumblr_consumer_secret = get_setting("tumblr_consumer_secret", "") or os.getenv("CONSUMER_SECRET") or ""
+        tumblr_oauth_token = get_setting("tumblr_oauth_token", "") or os.getenv("OAUTH_TOKEN") or ""
+        tumblr_oauth_secret = get_setting("tumblr_oauth_secret", "") or os.getenv("OAUTH_SECRET") or ""
+
+        set_setting("tumblr_consumer_key", tumblr_consumer_key)
+        set_setting("tumblr_consumer_secret", tumblr_consumer_secret)
+        set_setting("tumblr_oauth_token", tumblr_oauth_token)
+        set_setting("tumblr_oauth_secret", tumblr_oauth_secret)
+
+        media_manager.tumblr_manager.set_token(
+            consumer_key=tumblr_consumer_key,
+            consumer_secret=tumblr_consumer_secret,
+            oauth_secret=tumblr_oauth_secret,
+            oauth_token=tumblr_oauth_token
+        )
+
+        # twitter cookie
         twitter_cookie = get_setting("twitter_cookie", "")
         media_manager.twitter_manager.set_cookie(twitter_cookie)
 

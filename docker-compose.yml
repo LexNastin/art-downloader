@@ -6,11 +6,6 @@ services:
     volumes:
       - data:/app/data
     env_file: .env
-    environment:
-      CONSUMER_KEY: ""
-      CONSUMER_SECRET: ""
-      OAUTH_TOKEN: ""
-      OAUTH_SECRET: ""
     restart: unless-stopped
 
 volumes:

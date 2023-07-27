@@ -1,5 +1,4 @@
 import os
-from dotenv import load_dotenv
 from .insta_manager import InstaManager
 from .reddit_manager import RedditManager
 from .tumblr_manager import TumblrManager
@@ -9,18 +8,11 @@ import re
 from .response import Response
 from urllib.parse import urlparse
 
-load_dotenv()
-
 class MediaManager:
     def __init__(self):
-        consumer_key = os.getenv("CONSUMER_KEY")
-        consumer_secret = os.getenv("CONSUMER_SECRET")
-        oauth_token = os.getenv("OAUTH_TOKEN")
-        oauth_secret = os.getenv("OAUTH_SECRET")
-        
         self.insta_manager = InstaManager()
         self.reddit_manager = RedditManager()
-        self.tumblr_manager = TumblrManager(consumer_key, consumer_secret, oauth_token, oauth_secret)
+        self.tumblr_manager = TumblrManager()
         self.twitter_manager = TwitterManager()
 
     def get_image_links(self, link):

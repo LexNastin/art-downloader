@@ -40,8 +40,9 @@ From there everything should make sense (hopefully). Be sure to report any bugs!
 
 ## Making Tumblr Work
 
-For Tumblr to work, you must set the following 4 environment variables. Read the [Create a client](https://github.com/tumblr/pytumblr#create-a-client) section of the PyTumblr library, which explains methods to obtain those tokens.
+Go to the settings page, you should see fields to set your Tumblr tokens. Read the [Create a client](https://github.com/tumblr/pytumblr#create-a-client) section of the PyTumblr library, which lists methods to obtain those tokens.
 
+This method is deprecated and will be removed at 2.0.0 (if that ever happens haha). Setting the following 4 environment variables will work for now, but will only work if there respective tokens are not currently set in the settings.
 ```env
 CONSUMER_KEY = <consumer key>
 CONSUMER_SECRET = <consumer secret>

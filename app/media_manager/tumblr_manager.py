@@ -4,18 +4,6 @@ from bs4 import BeautifulSoup
 from .response import Response
 
 class TumblrManager:
-    def __init__(self, consumer_key=None, consumer_secret=None, oauth_token=None, oauth_secret=None):
-        self.initialized = False
-        if not consumer_key or not consumer_secret or not oauth_token or not oauth_secret:
-            return
-        self.tumblr = pytumblr.TumblrRestClient(
-            consumer_key,
-            consumer_secret,
-            oauth_token,
-            oauth_secret
-        )
-        self.initialized = True
-
     def get_image_links(self, url):
         try:
             if not self.initialized:
@@ -62,3 +50,15 @@ class TumblrManager:
                 "response": Response.FAILED,
                 "message": repr(e)
             }
+
+    def set_token(self, consumer_key=None, consumer_secret=None, oauth_token=None, oauth_secret=None):
+        self.initialized = False
+        if not consumer_key or not consumer_secret or not oauth_token or not oauth_secret:
+            return
+        self.tumblr = pytumblr.TumblrRestClient(
+            consumer_key,
+            consumer_secret,
+            oauth_token,
+            oauth_secret
+        )
+        self.initialized = True
