@@ -197,7 +197,7 @@
       }
     }
 
-    upload_social.addEventListener("click", event => {
+    const upload_social_callback = event => {
       let target = event.currentTarget
       target.disabled = true
       target.classList.add("is-loading")
@@ -232,7 +232,18 @@
             break
         }
       })
-    })
+    }
+
+    upload_social.addEventListener("click", upload_social_callback)
+    document.getElementById("social_url").onkeypress = event => {
+      const key = event.charCode || event.keyCode || 0
+      if (key == 13) {
+          upload_social_callback({
+            "currentTarget": upload_social
+          })
+        event.preventDefault()
+      }
+    }
     
     let up_buttons = [...document.getElementsByClassName("up-button")]
     let down_buttons = [...document.getElementsByClassName("down-button")]
