@@ -199,6 +199,7 @@
 
     const upload_social_callback = event => {
       let target = event.currentTarget
+      if (target.disabled) return
       target.disabled = true
       target.classList.add("is-loading")
       let url = document.getElementById("social_url").value
@@ -209,14 +210,17 @@
         target.disabled = false
         target.classList.remove("is-loading")
         response = await response.json()
+        let source = document.getElementById("source")
         switch (response["response"]) {
           case "success":
             flash()
             await preview_files(response)
+            if (!source.value) source.value = url
             break
           case "incomplete":
             flash("This may be the incomplete response")
             await preview_files(response)
+            if (!source.value) source.value = url
             break
           case "failed":
             flash(response["message"])
@@ -290,7 +294,7 @@
       <div class="field">
         <label class="label">Source</label>
         <div class="control">
-          <input class="input" type="text" name="source" value="{{ source }}">
+          <input class="input" type="text" name="source" id="source" value="{{ source }}">
         </div>
       </div>
 
