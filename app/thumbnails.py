@@ -4,6 +4,9 @@ import mimetypes
 import cv2
 from PIL import Image
 from werkzeug.security import safe_join
+from pillow_heif import register_heif_opener
+
+register_heif_opener()
 
 THUMBNAIL_DIR = os.path.join(DATA_DIR, "thumbnails")
 os.makedirs(THUMBNAIL_DIR, exist_ok=True)
