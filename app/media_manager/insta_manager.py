@@ -4,15 +4,13 @@ import requests
 from .response import Response
 
 class InstaManager:
-    def _get_img(_, candidates):
-        res = 0
-        link = None
+    def _get_img(_, media, candidates):
+        w = media["original_width"]
+        h = media["original_height"]
         for candidate in candidates:
-            new_res = candidate["width"] * candidate["height"]
-            if new_res > res:
-                res = new_res
-                link = candidate["url"]
-        return link
+            if candidate["width"] == w and candidate["height"] == h:
+                return candidate["url"]
+        return candidates[0]["url"]
 
     def get_image_links(self, link):
         try:
@@ -44,7 +42,7 @@ class InstaManager:
                         candidates = item["video_versions"]
                     else:
                         candidates = item["image_versions2"]["candidates"]
-                    url = self._get_img(candidates)
+                    url = self._get_img(item, candidates)
                     links.append(url)
             else:
                 if data["video_versions"] != None:
