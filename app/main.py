@@ -161,7 +161,7 @@ def post(post_ts):
     post = get_post(post_ts)
     if not post:
         flash("Post not found")
-    if not post.public and int(get_setting("login_required", "1")) and not current_user.is_authenticated:
+    if post and not post.public and int(get_setting("login_required", "1")) and not current_user.is_authenticated:
         return redirect(url_for("auth.login"))
     post_dir = safe_join(MEDIA_DIR, str(post_ts))
     media = []
