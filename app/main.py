@@ -623,6 +623,12 @@ def settings_post():
     set_setting("tumblr_oauth_secret", tumblr_oauth_secret)
     set_setting("tumblr_oauth_token", tumblr_oauth_token)
     set_setting("twitter_cookie", twitter_cookie)
+    media_manager.tumblr_manager.set_token(
+        consumer_key=tumblr_consumer_key,
+        consumer_secret=tumblr_consumer_secret,
+        oauth_secret=tumblr_oauth_secret,
+        oauth_token=tumblr_oauth_token
+    )
     media_manager.twitter_manager.set_cookie(twitter_cookie)
     return redirect(url_for("main.settings"))
 
