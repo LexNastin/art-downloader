@@ -49,7 +49,7 @@ class InstaManager:
                     candidates = data["video_versions"]
                 else:
                     candidates = data["image_versions2"]["candidates"]
-                url = self._get_img(candidates)
+                url = self._get_img(data, candidates)
                 links.append(url)
             if not links:
                 return {
