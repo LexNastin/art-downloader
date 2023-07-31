@@ -63,7 +63,7 @@ def login_maybe(func):
     return wrapper
 
 def strftime(timestamp):
-    return dt.fromtimestamp(timestamp).strftime("%d %b %Y - %H:%M:%S")
+    return dt.utcfromtimestamp(timestamp).strftime("%d %b %Y - %H:%M:%S")
 
 # stolen from SO
 def sizeof_fmt(num, suffix="B"):
@@ -313,7 +313,7 @@ def edit(post_ts):
             old_file_path = safe_join(post_dir, file["file"])
             new_file_path = safe_join(temp_post_dir, file["file"])
             shutil.copy(old_file_path, new_file_path)
-    datetime = dt.fromtimestamp(post_ts).isoformat()
+    datetime = dt.utcfromtimestamp(post_ts).isoformat()
     return render_template(
         "edit.html",
         datetime=datetime,
