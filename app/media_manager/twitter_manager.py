@@ -95,7 +95,7 @@ class TwitterManager:
     def get_image_links(self, url):
         try:
             tweet_id = re.findall(r"/status/(\d+)", url)[0]
-            tweeter = re.findall(r"twitter.com/(.*?)/status/\d+", url)[0]
+            tweeter = re.findall(r"(?:twitter|x).com/(.*?)/status/\d+", url)[0]
             tweet_details = self.tm.get_tweet_details(tweet_id)
             links = []
             # [[(item["media_url_https"], item["type"]) for item in entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"]] for entry in tweet_details["data"]["threaded_conversation_with_injections_v2"]["instructions"][0]["entries"] if "1623577224346497025" in entry["entryId"]]
@@ -114,7 +114,7 @@ class TwitterManager:
                 if "extended_entities" not in tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
                     new_url = tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["quoted_status_permalink"]["expanded"]
                     tweet_id = re.findall(r"/status/(\d+)", new_url)[0]
-                    tweeter = re.findall(r"twitter.com/(.*?)/status/\d+", new_url)[0]
+                    tweeter = re.findall(r"(?:twitter|x).com/(.*?)/status/\d+", new_url)[0]
                     tweet_details = self.tm.get_tweet_details(tweet_id)
                     tweet_entities = tweet_details["data"]["threaded_conversation_with_injections"]["instructions"][0]["entries"]
             media_entities = []

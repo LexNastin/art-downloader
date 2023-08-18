@@ -57,7 +57,7 @@ class MediaManager:
                 link = link.replace(poster, "www")
                 link = link.replace("/post/", f"/{poster}/")
             return self.tumblr_manager.get_image_links(link)
-        elif "twitter.com" in link:
+        elif "twitter.com" in link or "x.com" in link:
             return self.twitter_manager.get_image_links(link)
         else:
             return {
