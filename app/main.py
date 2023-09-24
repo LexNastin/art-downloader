@@ -202,10 +202,8 @@ def add_post():
     public = request.form.get("public")
     session_id = request.form.get("session_id") or get_random()
 
-    split_tags = [tag.strip() for tag in tags.split(",")]
+    split_tags = [tag.strip() for tag in tags.split(",") if len(tag.strip())]
     split_tags.sort()
-    if len(split_tags) == 1 and split_tags[0] == "":
-        split_tags = []
 
     temp_post_dir = safe_join(TEMP_DIR, session_id)
     temp_post_dir_exists = os.path.exists(temp_post_dir)
@@ -337,7 +335,7 @@ def edit_post(post_ts):
     public = request.form.get("public")
     session_id = request.form.get("session_id") or get_random()
 
-    split_tags = [tag.strip() for tag in tags.split(",")]
+    split_tags = [tag.strip() for tag in tags.split(",") if len(tag.strip())]
     split_tags.sort()
     if len(split_tags) == 1 and split_tags[0] == "":
         split_tags = []
