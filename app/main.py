@@ -179,6 +179,7 @@ def post(post_ts):
         "post.html",
         post=post,
         media=media,
+        get_thumbnail=get_thumbnail,
         strftime=strftime
     )
 

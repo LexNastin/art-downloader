@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block meta %}
+<meta name="og:description" content="Settings for {{ username }}" />
+{% endblock %}
+
 {% block content %}
 <script>
   document.addEventListener('DOMContentLoaded', () => {
