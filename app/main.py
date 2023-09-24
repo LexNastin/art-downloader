@@ -666,7 +666,7 @@ def delete_own_account():
     db.session.commit()
 
     logout_user()
-    return redirect(url_for("auth.login"))
+    return redirect(url_for("main.index"))
 
 @main.route("/user/<username>")
 @login_required
