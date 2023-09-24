@@ -42,7 +42,7 @@ def create_app():
     from .settings import get_setting, set_setting
     @app.context_processor
     def inject_globals():
-        return dict(app_name=get_setting("app_name", "Art Downloader"))
+        return dict(app_name=get_setting("app_name", "Art Downloader"), github_button=int(get_setting("github_button", "0")))
 
     # setup API tokens
     with app.app_context():

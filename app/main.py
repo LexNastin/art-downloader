@@ -562,6 +562,7 @@ def media_delete():
 def settings():
     allow_signups = int(get_setting("allow_signups", "1"))
     login_required = int(get_setting("login_required", "1"))
+    github_button = int(get_setting("github_button", "0"))
 
     tumblr_consumer_key = get_setting("tumblr_consumer_key", "")
     tumblr_consumer_secret = get_setting("tumblr_consumer_secret", "")
@@ -576,6 +577,7 @@ def settings():
         "settings.html",
         allow_signups=allow_signups,
         login_required=login_required,
+        github_button=github_button,
         tumblr_consumer_key=tumblr_consumer_key,
         tumblr_consumer_secret=tumblr_consumer_secret,
         tumblr_oauth_secret=tumblr_oauth_secret,
@@ -594,6 +596,9 @@ def settings_post():
 
     login_required = request.form.get("login_required")
     login_required = "1" if login_required == "on" else "0"
+
+    github_button = request.form.get("github_button")
+    github_button = "1" if github_button == "on" else "0"
 
     app_name = request.form.get("app_name") 
     app_name = app_name or "Art Downloader"
@@ -615,6 +620,7 @@ def settings_post():
 
     set_setting("allow_signups", allow_signups)
     set_setting("login_required", login_required)
+    set_setting("github_button", github_button)
     set_setting("app_name", app_name)
     set_setting("tumblr_consumer_key", tumblr_consumer_key)
     set_setting("tumblr_consumer_secret", tumblr_consumer_secret)

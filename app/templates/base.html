@@ -58,6 +58,14 @@
         <div class="navbar-end">
           <div class="navbar-item">
             <div class="buttons">
+              {% if github_button %}
+              <a class="button is-light" href="https://github.com/ArchGryphon9362/art-downloader" target="_blank">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>GitHub</span>
+              </a>
+              {% endif %}
               {% if not current_user.is_authenticated %}
               <a class="button is-light" href="{{ url_for('auth.signup') }}">
                 Sign Up

@@ -77,6 +77,14 @@
           </div>
       </div>
       <div class="field">
+          <div class="control">
+              <label class="checkbox">
+                  <input type="checkbox" name="github_button" {% if github_button %} checked {% endif %}>
+                  Show button to GitHub repo
+              </label>
+          </div>
+      </div>
+      <div class="field">
         <label class="label">App Name</label>
         <div class="control">
           <input class="input" type="text" name="app_name" placeholder="App Name" value="{{ app_name }}">
