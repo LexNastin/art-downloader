@@ -104,6 +104,39 @@
       form.appendChild(exclude_input)
       form.submit()
     })
+
+    let select_all = document.getElementById("select-all")
+    select_all.addEventListener("click", event => {
+      let tags = [...document.getElementsByClassName("tag")]
+      tags.forEach(tag => {
+        let classes = tag.classList
+        let exp_classes = [...classes]
+        classes.add("is-success")
+        classes.remove("is-danger")
+      })
+    })
+
+    let select_none = document.getElementById("select-none")
+    select_none.addEventListener("click", event => {
+      let tags = [...document.getElementsByClassName("tag")]
+      tags.forEach(tag => {
+        let classes = tag.classList
+        let exp_classes = [...classes]
+        classes.remove("is-success")
+        classes.add("is-danger")
+      })
+    })
+
+    let deselect_all = document.getElementById("deselect-all")
+    deselect_all.addEventListener("click", event => {
+      let tags = [...document.getElementsByClassName("tag")]
+      tags.forEach(tag => {
+        let classes = tag.classList
+        let exp_classes = [...classes]
+        classes.remove("is-success")
+        classes.remove("is-danger")
+      })
+    })
   })
 </script>
 
@@ -125,6 +158,17 @@
     <div class="columns is-multiline">
       <div class="column is-narrow">
         <p>Filter by tags:</p>
+        <div class="field">
+            <div class="control">
+                <button id="select-all" class="button">All</button>
+                <button id="select-none" class="button">None</button>
+            </div>
+        </div>
+        <div class="field">
+            <div class="control">
+                <button type="button" id="deselect-all" class="button is-fullwidth">Deselect</button>
+            </div>
+        </div>
       </div>
       <div style="margin-bottom: 0" class="column tags" id="filters">
         {% for tag in tags %}
