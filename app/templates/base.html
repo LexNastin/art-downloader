@@ -4,9 +4,17 @@
     <title>{{ app_name }}</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="og:title" content="{{ app_name }}" />
+    <meta property="og:title" content="{{ app_name }}" />
+    <meta property="og:type" content="website">
+
+    <meta name="twitter:title" content="{{ app_name }}">
+    <meta property="twitter:domain" content="{{ request.headers['Host'] }}">
+    <meta property="twitter:url" content="{{ request.base_url }}">
     {% block meta %}
-    <meta name="og:description" content="An art archiving website" />
+    <meta name="description" content="An art archiving website" />
+    <meta property="og:description" content="An art archiving website" />
+    <meta name="twitter:description" content="An art archiving website" />
+    <meta name="twitter:card" content="summary_large_image">
     {% endblock %}
     <link
       rel="stylesheet"

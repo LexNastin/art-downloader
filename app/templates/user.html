@@ -1,7 +1,10 @@
 {% extends "base.html" %}
 
 {% block meta %}
-<meta name="og:description" content="Settings for {{ username }}" />
+<meta name="description" content="Settings for {{ username }}" />
+<meta property="og:description" content="Settings for {{ username }}" />
+
+<meta name="twitter:description" content="Settings for {{ username }}" />
 {% endblock %}
 
 {% block content %}
