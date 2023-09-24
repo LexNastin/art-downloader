@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block meta %}
-<meta name="description" content="Post with tags: {% for tag in post.tags %}[{{tag}}]{% if not loop.last %}  {% endif %}{% endfor %}" />
+<meta name="description" content="Post with tags: {% for tag in post.tags %}[{{tag}}]{% if not loop.last %}  {% endif %}{% endfor %}&#x0A;Source: {{ post.source or "No source" }}" />
 <meta property="og:description" content="Post with tags: {% for tag in post.tags %}[{{tag}}]{% if not loop.last %}  {% endif %}{% endfor %}" />
 <meta property="og:image" content="{{ request.url_root }}{{ get_thumbnail(post.timestamp|string) }}" />
 {% if post.source %}
