@@ -20,8 +20,12 @@ class TumblrManager:
             posts = blog["posts"]
             post = [post for post in posts if post["id_string"] == id]
             post = post[0]
+            print(post)
             if "photos" not in post:
-                post = post["body"]
+                if "body" in post:
+                    post = post["body"]
+                elif "trail" in post:
+                    post = "".join([trail["content_raw"] for trail in post["trail"]])
                 post = BeautifulSoup(post, features="lxml")
                 imgs = [img.attrs["srcset"] if "srcset" in img.attrs else img.attrs["src"] for img in post.find_all("img")]
                 for i in range(len(imgs)):
