@@ -20,7 +20,6 @@ class TumblrManager:
             posts = blog["posts"]
             post = [post for post in posts if post["id_string"] == id]
             post = post[0]
-            print(post)
             if "photos" not in post:
                 if "body" in post:
                     post = post["body"]
