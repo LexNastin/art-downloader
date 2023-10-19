@@ -133,7 +133,7 @@ class TwitterManager:
                 }
             for entry in media_entities:
                 if entry["type"] == "photo":
-                    links.append(entry["media_url_https"])
+                    links.append(entry["media_url_https"] + "?format=png&name=4096x4096")
                 elif entry["type"] == "video":
                     videos = entry["video_info"]["variants"]
                     videos.sort(key=lambda x: x["bitrate"] if "bitrate" in x else 0)
@@ -167,7 +167,7 @@ class TwitterManager:
             for tweet in reply_thread:
                 for entry in tweet:
                     if entry["type"] == "photo":
-                        links.append(entry["media_url_https"])
+                        links.append(entry["media_url_https"] + "?format=png&name=4096x4096")
                     elif entry["type"] == "video":
                         videos = entry["video_info"]["variants"]
                         videos.sort(key=lambda x: x["bitrate"] if "bitrate" in x else 0)
