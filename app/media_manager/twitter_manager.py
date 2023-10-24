@@ -98,7 +98,7 @@ class TwitterManager:
             tweeter = re.findall(r"(?:twitter|x).com/(.*?)/status/\d+", url)[0]
             tweet_details = self.tm.get_tweet_details(tweet_id)
             links = []
-            # [[(item["media_url_https"], item["type"]) for item in entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"]] for entry in tweet_details["data"]["threaded_conversation_with_injections_v2"]["instructions"][0]["entries"] if "1623577224346497025" in entry["entryId"]]
+
             if not tweet_details:
                 return {
                     "response": Response.REMOVED
@@ -110,13 +110,6 @@ class TwitterManager:
                 return {
                     "response": Response.REMOVED
                 }
-            if "quoted_status_permalink" in tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
-                if "extended_entities" not in tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
-                    new_url = tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["quoted_status_permalink"]["expanded"]
-                    tweet_id = re.findall(r"/status/(\d+)", new_url)[0]
-                    tweeter = re.findall(r"(?:twitter|x).com/(.*?)/status/\d+", new_url)[0]
-                    tweet_details = self.tm.get_tweet_details(tweet_id)
-                    tweet_entities = tweet_details["data"]["threaded_conversation_with_injections"]["instructions"][0]["entries"]
             media_entities = []
             for entry in tweet_entities:
                 if tweet_id in entry["entryId"]:
@@ -125,12 +118,7 @@ class TwitterManager:
                     if "extended_entities" in entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
                         media_entities = entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"]
                         break
-            # tweet_entities = [entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"] for entry in tweet_details["data"]["threaded_conversation_with_injections_v2"]["instructions"][0]["entries"] if tweet_id in entry["entryId"] and "extended_entities" in entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]][0]
-            if not media_entities:
-                return {
-                    "response": Response.FAILED,
-                    "message": "Not a media post!"
-                }
+
             for entry in media_entities:
                 if entry["type"] == "photo":
                     links.append(entry["media_url_https"] + "?format=png&name=4096x4096")
@@ -154,15 +142,7 @@ class TwitterManager:
                                 break
             if reply_thread:
                 reply_thread = [tweet["item"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"] for tweet in reply_thread["content"]["items"] if tweet["item"]["itemContent"]["itemType"] == "TimelineTweet" and "extended_entities" in tweet["item"]["itemContent"]["tweet_results"]["result"]["legacy"]]
-            # reply_entities = [
-            #         [
-            #             tweet["item"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"] for tweet in entry["content"]["items"]
-            #             if tweet["item"]["itemContent"]["itemType"] == "TimelineTweet" and "extended_entities" in tweet["item"]["itemContent"]["tweet_results"]["result"]["legacy"]]
-            #
-            #         for entry in tweet_details["data"]["threaded_conversation_with_injections_v2"]["instructions"][0]["entries"] if "conversationthread" in entry["entryId"]
-            #         and "tombstone" not in entry["content"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"]
-            #         and entry["content"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"]["legacy"]["in_reply_to_status_id_str"] == tweet_id
-            #     ][0]
+
             response_type = Response.SUCCESS
             for tweet in reply_thread:
                 for entry in tweet:
@@ -176,6 +156,18 @@ class TwitterManager:
                     else:
                         response_type = Response.INCOMPLETE
                         continue
+
+            if not links and "quoted_status_permalink" in tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
+                if "extended_entities" not in tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
+                    new_url = tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["quoted_status_permalink"]["expanded"]
+                    return self.get_image_links(new_url)
+
+            if not links:
+                return {
+                    "response": Response.FAILED,
+                    "message": "Not a media post!"
+                }
+
             return {
                 "response": response_type,
                 "links": links
