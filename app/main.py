@@ -17,6 +17,7 @@ import os
 import mimetypes
 import shutil
 import json
+import re
 
 main = Blueprint("main", __name__)
 
@@ -84,22 +85,29 @@ def get_all_tags(all_posts):
 def get_tree_size(path):
     """Return total size of files in given path and subdirs."""
     total = 0
+    files = 0
     for entry in os.scandir(path):
         if entry.is_dir(follow_symlinks=False):
-            total += get_tree_size(entry.path)
+            dir_size, dir_files = get_tree_size(entry.path)
+            total += dir_size
+            files += dir_files
         else:
             total += entry.stat(follow_symlinks=False).st_size
-    return total
+            if re.match(r".*\/media\/\d+\/.+", entry.path):
+                files += 1
+    return total, files
 
 def get_stats():
     all_posts = get_all_posts()
     posts = len(all_posts)
     tags = len(get_all_tags(all_posts))
-    space = sizeof_fmt(get_tree_size(DATA_DIR))
+    space, files = get_tree_size(DATA_DIR)
+    space = sizeof_fmt(space)
     return {
         "posts": posts,
         "tags": tags,
-        "space": space
+        "space": space,
+        "media": files
     }
 
 # main website ui
