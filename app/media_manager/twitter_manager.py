@@ -148,7 +148,7 @@ class TwitterManager:
                 for entry in tweet:
                     if entry["type"] == "photo":
                         links.append(entry["media_url_https"] + "?format=png&name=4096x4096")
-                    elif entry["type"] == "video":
+                    elif entry["type"] in ["video", "animated_gif"]:
                         videos = entry["video_info"]["variants"]
                         videos.sort(key=lambda x: x["bitrate"] if "bitrate" in x else 0)
                         video_url = videos[-1]["url"]
