@@ -53,3 +53,7 @@ OAUTH_SECRET = <oauth secret>
 ## Making Twitter Work
 
 Go to Twitter and login (you can create an account for the sole purpose of this program). Now open the F12 menu and go to the `Network` tab. Refresh the page, and look at the first request. Go to the `Headers` tab on that request, and scroll down until you see the `Cookie` header. Copy the cookie, and go to the settings of the Art Downloader. There you should find a Twitter Cookie setting. Paste your cookie there and save. Twitter uploads should now work :D. I'm not sure how long these last, so if something's not working after a little while, try repeating this step.
+
+## Supporting The Development of This Tool
+
+First of all, if you like the art hosted on any of the instances I host, DO NOT donate to this tool. Any such donations WILL BE refunded. Rather, support the respective artists directly. Find them by going to the sources of the art you find, and looking for a donate/commission link somewhere on their page. I am not in any way trying to steal what should be going to them. Now, if you actually came here to support me in the development of Art Downloader, you can either help by finding issues and/or submitting useful pull requests, or if you really want to, by clicking on the"Donate" button at the top of this GitHub repo, where you can find [my Ko-fi page](https://ko-fi.com/lexnastin). Thanks to everyone for absolutely any type of support, as this is just a hobby project that I maintain for personal use in my free time.
