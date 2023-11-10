@@ -452,7 +452,7 @@ def upload_social():
     if not session_id:
         return "No session id provided", 400
     response = media_manager.get_image_links(media_url)
-    if response["response"] != MResponse.SUCCESS:
+    if response["response"] != MResponse.SUCCESS and response["response"] != MResponse.INCOMPLETE:
         return response
     links = response["links"]
     upload_path = safe_join(TEMP_DIR, session_id)
@@ -479,7 +479,7 @@ def upload_social():
             dl_req = urlopen(link)
         except Exception as e:
             return {
-                "response": "failed",
+                "response": MResponse.FAILED,
                 "message": repr(e)
             }
         data = dl_req.read()
@@ -487,7 +487,7 @@ def upload_social():
             output.write(data)
     uploaded_files.sort(key=lambda x: int( x["file"].split(".")[0] ))
     return {
-        "response": "success",
+        "response": response["response"],
         "files": uploaded_files
     }
 
