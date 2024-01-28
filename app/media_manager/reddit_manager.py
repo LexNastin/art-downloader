@@ -7,6 +7,10 @@ from urllib.parse import urlparse
 class RedditManager:
     def get_image_links(self, url):
         try:
+            redirect = requests.head("https://www.reddit.com/r/TeslaModel3/s/EKxlCMVy7H").headers["location"]
+            if redirect:
+                url = redirect
+
             data_url = url.split("?")[0] + ".json"
             post_data_text = requests.get(data_url, headers={
                 "User-Agent": "linux:favourite_art_scraper:v0.1 (by: /u/archgryphon9362)"
