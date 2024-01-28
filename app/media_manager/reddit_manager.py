@@ -2,6 +2,7 @@ import requests
 import html
 import json
 from .response import Response
+from urllib.parse import urlparse
 
 class RedditManager:
     def get_image_links(self, url):
@@ -56,6 +57,12 @@ class RedditManager:
                     if len(link) > 0:
                         new_media.append(html.unescape(link[0]))
                 media = new_media
+            elif "url" in valuable:
+                media = []
+                supported_exts = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp"]
+                extension = urlparse(valuable["url"]).path.split(".")[-1].lower()
+                if any(extension.startswith(current_ext) for current_ext in supported_exts):
+                    media.append(valuable["url"])
             else:
                 return {
                     "response": Response.FAILED,

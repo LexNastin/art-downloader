@@ -26,7 +26,7 @@ class MediaManager:
                 "message": repr(e)
             }
 
-        if any(extension == current_ext for current_ext in supported):
+        if any(extension.startswith(current_ext) for current_ext in supported):
             return {
                 "response": Response.SUCCESS,
                 "links": [link]
