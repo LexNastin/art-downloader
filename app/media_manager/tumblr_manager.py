@@ -46,7 +46,8 @@ class TumblrManager:
                 }
             return {
                 "response": Response.SUCCESS,
-                "links": imgs
+                "links": imgs,
+                "url": url
             }
         except Exception as e:
             return {

@@ -488,6 +488,7 @@ def upload_social():
     uploaded_files.sort(key=lambda x: int( x["file"].split(".")[0] ))
     return {
         "response": response["response"],
+        "url": response["url"],
         "files": uploaded_files
     }
 

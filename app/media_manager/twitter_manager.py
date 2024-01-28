@@ -170,7 +170,8 @@ class TwitterManager:
 
             return {
                 "response": response_type,
-                "links": links
+                "links": links,
+                "url": url
             }
         except Exception as e:
             return {

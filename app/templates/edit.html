@@ -222,12 +222,12 @@
           case "success":
             flash()
             await preview_files(response)
-            if (!source.value) source.value = url
+            if (!source.value) source.value = response["url"] ?? url
             break
           case "incomplete":
             flash("This may be the incomplete response")
             await preview_files(response)
-            if (!source.value) source.value = url
+            if (!source.value) source.value = response["url"] ?? url
             break
           case "failed":
             flash(response["message"])

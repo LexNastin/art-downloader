@@ -29,7 +29,8 @@ class MediaManager:
         if any(extension.startswith(current_ext) for current_ext in supported):
             return {
                 "response": Response.SUCCESS,
-                "links": [link]
+                "links": [link],
+                "url": link
             }
         elif "instagram.com" in link:
             return self.insta_manager.get_image_links(link)

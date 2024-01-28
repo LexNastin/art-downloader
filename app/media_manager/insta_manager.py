@@ -58,7 +58,8 @@ class InstaManager:
                 }
             return {
                 "response": Response.SUCCESS,
-                "links": links
+                "links": links,
+                "url": link
             }
         except Exception as e:
             return {

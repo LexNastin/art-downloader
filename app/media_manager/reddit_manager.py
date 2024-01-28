@@ -2,7 +2,6 @@ import requests
 import html
 import json
 from .response import Response
-from urllib.parse import urlparse
 
 class RedditManager:
     def get_image_links(self, url):
@@ -79,7 +78,8 @@ class RedditManager:
                 }
             return {
                 "response": response_type,
-                "links": media
+                "links": media,
+                "url": url
             }
         except Exception as e:
             return {
