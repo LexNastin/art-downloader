@@ -6,7 +6,7 @@ from .response import Response
 class RedditManager:
     def get_image_links(self, url):
         try:
-            redirect = requests.head("https://www.reddit.com/r/TeslaModel3/s/EKxlCMVy7H").headers["location"]
+            redirect = requests.head(url).headers["location"]
             if redirect:
                 url = redirect
 
