@@ -15,7 +15,6 @@ class InstaManager:
     def get_image_links(self, link):
         try:
             id = re.findall(r"instagram.com/(?:(?:p)|(?:reels?))/([a-zA-Z\-0-9_]+)/?", link)[0]
-            print(1)
             variables = {
                 "shortcode": id
             }
