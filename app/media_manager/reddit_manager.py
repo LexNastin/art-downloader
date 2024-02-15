@@ -2,13 +2,14 @@ import requests
 import html
 import json
 from .response import Response
+from urllib.parse import urljoin
 
 class RedditManager:
     def get_image_links(self, url):
         try:
             redirect = requests.head(url).headers["location"]
             if redirect:
-                url = redirect
+                url = urljoin(url, redirect)
 
             data_url = url.split("?")[0] + ".json"
             post_data_text = requests.get(data_url, headers={
