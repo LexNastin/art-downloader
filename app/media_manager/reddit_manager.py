@@ -15,8 +15,8 @@ class RedditManager:
             post_data_text = requests.get(data_url, headers={
                 "User-Agent": "linux:favourite_art_scraper:v0.1 (by: /u/archgryphon9362)"
             })
-            remaining = int(post_data_text.headers["X-Ratelimit-Remaining"])
-            reset = int(post_data_text.headers["X-Ratelimit-Reset"])
+            remaining = float(post_data_text.headers["X-Ratelimit-Remaining"])
+            reset = float(post_data_text.headers["X-Ratelimit-Reset"])
             post_data_text = post_data_text.text
             post_data = json.loads(post_data_text)
             response_type = Response.SUCCESS
