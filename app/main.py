@@ -1,6 +1,6 @@
 from functools import wraps
 from urllib.parse import urlparse
-from urllib.request import urlopen
+import requests
 from flask import Blueprint, abort, flash, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.security import safe_join, generate_password_hash
 from flask_login import current_user, login_required, logout_user
@@ -476,13 +476,13 @@ def upload_social():
         })
         new_path = safe_join(upload_path, new_filename)
         try:
-            dl_req = urlopen(link)
+            dl_req = requests.get(link)
         except Exception as e:
             return {
                 "response": MResponse.FAILED,
                 "message": repr(e)
             }
-        data = dl_req.read()
+        data = dl_req.content
         with open(new_path, "wb") as output:
             output.write(data)
     uploaded_files.sort(key=lambda x: int( x["file"].split(".")[0] ))
