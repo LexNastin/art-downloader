@@ -768,14 +768,16 @@ def serve_media(post_ts, path):
 @main.route("/thumb/<path>")
 def serve_thumbnail(path):
     post = get_post(path.split(".")[0])
+    thumb_dir = os.path.join(DATA_DIR, "thumbnails")
     if not post:
         if int(get_setting("login_required", "1")) and not current_user.is_authenticated:
             return redirect(url_for("auth.login"))
+        elif path == "fail.webp":
+            return send_from_directory(thumb_dir, path)
         else:
             abort(404)
     if not post.public and int(get_setting("login_required", "1")) and not current_user.is_authenticated:
         return redirect(url_for("auth.login"))
-    thumb_dir = os.path.join(DATA_DIR, "thumbnails")
     return send_from_directory(thumb_dir, path)
 
 @main.route("/temp/<path:path>")
