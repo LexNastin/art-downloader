@@ -2,7 +2,7 @@ import requests
 import html
 import json
 from .response import Response
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 class RedditManager:
     def get_image_links(self, url):
