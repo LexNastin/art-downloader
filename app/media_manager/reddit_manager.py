@@ -7,9 +7,9 @@ from urllib.parse import urljoin, urlparse
 class RedditManager:
     def get_image_links(self, url):
         try:
-            redirect = requests.head(url).headers["location"]
-            if redirect:
-                url = urljoin(url, redirect)
+            redirect_headers = requests.head(url).headers
+            if "location" in redirect_headers:
+                url = urljoin(url, redirect_headers["location"])
 
             data_url = url.split("?")[0] + ".json"
             post_data_text = requests.get(data_url, headers={
