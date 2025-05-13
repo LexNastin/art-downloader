@@ -80,7 +80,7 @@ class RedditManager:
             return {
                 "response": response_type,
                 "links": media,
-                "url": url
+                "url": url.split("?")[0]
             }
         except Exception as e:
             return {

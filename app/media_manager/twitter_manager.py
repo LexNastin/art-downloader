@@ -171,7 +171,7 @@ class TwitterManager:
             return {
                 "response": response_type,
                 "links": links,
-                "url": url
+                "url": url.split("?")[0]
             }
         except Exception as e:
             return {

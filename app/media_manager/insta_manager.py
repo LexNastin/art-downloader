@@ -59,7 +59,7 @@ class InstaManager:
             return {
                 "response": Response.SUCCESS,
                 "links": links,
-                "url": link
+                "url": link.split("?")[0]
             }
         except Exception as e:
             return {
