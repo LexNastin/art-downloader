@@ -40,15 +40,6 @@ class RedditManager:
                     "response": Response.FAILED,
                     "message": "Reddit videos are currently unsupported"
                 }
-            elif "preview" in valuable:
-                media = valuable["preview"]["images"]
-                if len(media) > 1 or "media_metadata" in valuable:
-                    response_type = Response.INCOMPLETE
-                media = media[0]
-                if media["variants"] != {} and "obfuscated" not in media["variants"]:
-                    media = [html.unescape(list(media["variants"].values())[0]["source"]["url"])]
-                else:
-                    media = [html.unescape(media["source"]["url"])]
             elif "media_metadata" in valuable and "gallery_data" in valuable:
                 ids = [item["media_id"] for item in valuable["gallery_data"]["items"]]
                 media = []
@@ -61,6 +52,15 @@ class RedditManager:
                     if len(link) > 0:
                         new_media.append(html.unescape(link[0]))
                 media = new_media
+            elif "preview" in valuable:
+                media = valuable["preview"]["images"]
+                if len(media) > 1 or "media_metadata" in valuable:
+                    response_type = Response.INCOMPLETE
+                media = media[0]
+                if media["variants"] != {} and "obfuscated" not in media["variants"]:
+                    media = [html.unescape(list(media["variants"].values())[0]["source"]["url"])]
+                else:
+                    media = [html.unescape(media["source"]["url"])]
             elif "url" in valuable:
                 media = []
                 supported_exts = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp"]
