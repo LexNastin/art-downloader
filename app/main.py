@@ -469,7 +469,7 @@ def upload_social():
         parsed_link = urlparse(link)
         name = parsed_link.path
         ext = name.split(".")[-1]
-        ext_final = "mp4" if "m3u8" else ext
+        ext_final = "mp4" if "m3u8" in ext else ext
         new_filename = f"{index}.{ext_final}"
         uploaded_files.append({
             "location": f"/temp/{session_id}/{new_filename}",
