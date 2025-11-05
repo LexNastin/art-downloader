@@ -13,6 +13,7 @@ from . import DATA_DIR, MEDIA_DIR, TEMP_DIR, db
 from .settings import get_setting, set_setting
 from datetime import datetime as dt
 from ordered_set import OrderedSet
+from yt_dlp import YoutubeDL
 import os
 import mimetypes
 import shutil
@@ -468,23 +469,37 @@ def upload_social():
         parsed_link = urlparse(link)
         name = parsed_link.path
         ext = name.split(".")[-1]
-        new_filename = f"{index}.{ext}"
+        ext_final = "mp4" if "m3u8" else ext
+        new_filename = f"{index}.{ext_final}"
         uploaded_files.append({
             "location": f"/temp/{session_id}/{new_filename}",
             "type": mimetypes.guess_type(new_filename)[0].split("/")[0],
             "file": new_filename
         })
         new_path = safe_join(upload_path, new_filename)
-        try:
-            dl_req = requests.get(link)
-        except Exception as e:
-            return {
-                "response": MResponse.FAILED,
-                "message": repr(e)
+        if ext != "m3u8":
+            try:
+                dl_req = requests.get(link)
+            except Exception as e:
+                return render_template(
+                    "fail.html",
+                    message=repr(e),
+                    url=response["url"],
+                    response=MResponse.FAILED
+                )
+            data = dl_req.content
+            with open(new_path, "wb") as output:
+                output.write(data)
+        else:
+            opts = {
+                "outtmpl": new_path,
+                "postprocessors": [{
+                    "key": "FFmpegVideoConvertor",
+                    "preferedformat": "mp4"
+                }]
             }
-        data = dl_req.content
-        with open(new_path, "wb") as output:
-            output.write(data)
+            with YoutubeDL(opts) as ydl:
+                ydl.download([link])
     uploaded_files.sort(key=lambda x: int( x["file"].split(".")[0] ))
     return {
         "response": response["response"],

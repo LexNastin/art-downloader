@@ -18,7 +18,7 @@ class MediaManager:
     def get_image_links(self, link):
         try:
             parsed = urlparse(link)
-            supported = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp", "gif"]
+            supported = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp", "gif", "m3u8"]
             extension = parsed.path.split(".")[-1].lower()
         except Exception as e:
             return {

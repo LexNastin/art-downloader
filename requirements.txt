@@ -12,3 +12,4 @@ opencv-python-headless~=4.10.0.84
 ordered-set~=4.1.0
 Flask-Migrate~=4.0.4
 waitress~=2.1.2
+yt-dlp~=2025.10.22

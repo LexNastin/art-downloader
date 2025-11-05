@@ -36,10 +36,6 @@ class RedditManager:
                 }
             if valuable["media"] and valuable["media"]["reddit_video"]:
                 media = [html.unescape(valuable["media"]["reddit_video"]["hls_url"])]
-                return {
-                    "response": Response.FAILED,
-                    "message": "Reddit videos are currently unsupported"
-                }
             elif "media_metadata" in valuable and "gallery_data" in valuable:
                 ids = [item["media_id"] for item in valuable["gallery_data"]["items"]]
                 media = []
