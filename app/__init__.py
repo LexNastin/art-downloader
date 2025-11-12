@@ -64,9 +64,12 @@ def create_app():
             oauth_token=tumblr_oauth_token
         )
 
-        # twitter cookie
+        # twitter settings
         twitter_cookie = get_setting("twitter_cookie", "")
+        twitter_user_agent = get_setting("twitter_user_agent", "")
+
         media_manager.twitter_manager.set_cookie(twitter_cookie)
+        media_manager.twitter_manager.set_user_agent(twitter_user_agent)
 
     # setup login manager
     login_manager = LoginManager()

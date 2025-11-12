@@ -595,6 +595,7 @@ def settings():
     tumblr_oauth_token = get_setting("tumblr_oauth_secret", "")
 
     twitter_cookie = get_setting("twitter_cookie", "")
+    twitter_user_agent = get_setting("twitter_user_agent", "")
 
     users = [user.username for user in User.query.all()]
     users.remove(current_user.username)
@@ -608,6 +609,7 @@ def settings():
         tumblr_oauth_secret=tumblr_oauth_secret,
         tumblr_oauth_token=tumblr_oauth_token,
         twitter_cookie=twitter_cookie,
+        twitter_user_agent=twitter_user_agent,
         users=users,
         stats=get_stats()
     )
@@ -643,6 +645,9 @@ def settings_post():
     twitter_cookie = request.form.get("twitter_cookie") 
     twitter_cookie = twitter_cookie or ""
 
+    twitter_user_agent = request.form.get("twitter_user_agent")
+    twitter_user_agent = twitter_user_agent or ""
+
     set_setting("allow_signups", allow_signups)
     set_setting("login_required", login_required)
     set_setting("github_button", github_button)
@@ -652,6 +657,7 @@ def settings_post():
     set_setting("tumblr_oauth_secret", tumblr_oauth_secret)
     set_setting("tumblr_oauth_token", tumblr_oauth_token)
     set_setting("twitter_cookie", twitter_cookie)
+    set_setting("twitter_user_agent", twitter_user_agent)
     media_manager.tumblr_manager.set_token(
         consumer_key=tumblr_consumer_key,
         consumer_secret=tumblr_consumer_secret,
@@ -659,6 +665,7 @@ def settings_post():
         oauth_token=tumblr_oauth_token
     )
     media_manager.twitter_manager.set_cookie(twitter_cookie)
+    media_manager.twitter_manager.set_user_agent(twitter_user_agent)
     return redirect(url_for("main.settings"))
 
 # user setting paths

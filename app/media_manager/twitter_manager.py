@@ -2,15 +2,17 @@ import requests
 from http.cookies import SimpleCookie
 import json
 import re
+from enum import Enum
 from .response import Response
 
-ROOT_URL = "https://twitter.com"
+ROOT_URL = "https://x.com"
 AUTHORIZATION = "Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA"
 
 class Twitter:
     def __init__(self, log_level=1):
         self.log_level = log_level
         self.cookie = ""
+        self.user_agent = ""
 
     def _log(self, text):
         if self.log_level >= 1:
@@ -30,40 +32,61 @@ class Twitter:
             raise Exception("Twitter cookie not properly set")
         request_headers = {
             "authorization": AUTHORIZATION,
+            "content-type": "application/json",
             "cookie": self.cookie,
             "x-csrf-token": csrf_token
         }
+        if self.user_agent != "":
+            request_headers["user-agent"] = self.user_agent
+
         variables = {
             "focalTweetId": str(tweet_id),
-            "with_rux_injections": True,
+            "with_rux_injections": False,
+            "rankingMode": "Relevance",
             "includePromotedContent": True,
             "withCommunity": True,
             "withBirdwatchNotes": True,
             "withVoice": True
         }
         features = {
-            "rweb_lists_timeline_redesign_enabled": True,
-            "responsive_web_graphql_exclude_directive_enabled": True,
+            "rweb_video_screen_enabled": False,
+            "payments_enabled": False,
+            "profile_label_improvements_pcf_label_in_post_enabled": True,
+            "responsive_web_profile_redirect_enabled": False,
+            "rweb_tipjar_consumption_enabled": True,
             "verified_phone_label_enabled": False,
             "creator_subscriptions_tweet_preview_api_enabled": True,
             "responsive_web_graphql_timeline_navigation_enabled": True,
             "responsive_web_graphql_skip_user_profile_image_extensions_enabled": False,
-            "tweetypie_unmention_optimization_enabled": True,
+            "premium_content_api_read_enabled": False,
+            "communities_web_enable_tweet_community_results_fetch": True,
+            "c9s_tweet_anatomy_moderator_badge_enabled": True,
+            "responsive_web_grok_analyze_button_fetch_trends_enabled": False,
+            "responsive_web_grok_analyze_post_followups_enabled": True,
+            "responsive_web_jetfuel_frame": True,
+            "responsive_web_grok_share_attachment_enabled": True,
+            "articles_preview_enabled": True,
             "responsive_web_edit_tweet_api_enabled": True,
             "graphql_is_translatable_rweb_tweet_is_translatable_enabled": True,
             "view_counts_everywhere_api_enabled": True,
             "longform_notetweets_consumption_enabled": True,
-            "responsive_web_twitter_article_tweet_consumption_enabled": False,
+            "responsive_web_twitter_article_tweet_consumption_enabled": True,
             "tweet_awards_web_tipping_enabled": False,
+            "responsive_web_grok_show_grok_translated_post": False,
+            "responsive_web_grok_analysis_button_from_backend": True,
+            "creator_subscriptions_quote_tweet_preview_enabled": False,
             "freedom_of_speech_not_reach_fetch_enabled": True,
             "standardized_nudges_misinfo": True,
             "tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled": True,
             "longform_notetweets_rich_text_read_enabled": True,
             "longform_notetweets_inline_media_enabled": True,
-            "responsive_web_media_download_video_enabled": False,
+            "responsive_web_grok_image_annotation_enabled": True,
+            "responsive_web_grok_imagine_annotation_enabled": True,
+            "responsive_web_grok_community_note_auto_translation_is_enabled": False,
             "responsive_web_enhance_cards_enabled": False
         }
-        request_url = f"{ROOT_URL}/i/api/graphql/q94uRCEn65LZThakYcPT6g/TweetDetail"
+
+        request_url = f"{ROOT_URL}/i/api/graphql/YVyS4SfwYW7Uw5qwy0mQCA/TweetDetail"
 
         request_body = {
             "variables": json.dumps(variables),
@@ -88,6 +111,136 @@ class Twitter:
         self._debug(f"Successfully got TweetDetail for {tweet_id}")
         return tweet_details.json()
 
+class TwitterParser:
+    class TweetItem:
+        class DisplayType(Enum):
+            TWEET = 0
+            SELF_THREAD = 1
+
+            OTHER = -1
+
+            @classmethod
+            def from_str(cls, display_type):
+                if display_type == "Tweet":
+                    return cls.TWEET
+                if display_type == "SelfThread":
+                    return cls.SELF_THREAD
+
+                return cls.OTHER
+
+        def __init__(self, content):
+            # some more modern tweets (i think it's only the advertisement ones lol)
+            if "tweet" in content["tweet_results"]["result"]:
+                content["tweet_results"]["result"] = content["tweet_results"]["result"]["tweet"]
+
+            tweet = content["tweet_results"]["result"]["legacy"]
+
+            self.tweet_id = tweet["id_str"]
+            self.display_type = self.DisplayType.from_str(content["tweetDisplayType"])
+            self.quote_url = None
+            self.incomplete = False
+            self.media_links = []
+
+            if "quoted_status_permalink" in tweet:
+                self.quote_url = tweet["quoted_status_permalink"]["expanded"]
+
+            media_entities = []
+            if "extended_entities" in tweet:
+                media_entities = tweet["extended_entities"]["media"]
+
+            for entry in media_entities:
+                if entry["type"] == "photo":
+                    self.add_media(entry["media_url_https"] + "?format=png&name=4096x4096")
+                elif entry["type"] in ["video", "animated_gif"]:
+                    videos = entry["video_info"]["variants"]
+                    videos.sort(key=lambda x: x["bitrate"] if "bitrate" in x else 0)
+                    video_url = videos[-1]["url"]
+                    self.add_media(video_url)
+                else:
+                    self.incomplete = True
+                    continue
+
+        def add_media(self, link):
+            self.media_links.append(link)
+
+    class TombstoneItem:
+        pass
+
+    class TimelineModule:
+        def __init__(self):
+            self.items = []
+
+        def add_item(self, item):
+            self.items.append(item)
+
+    class Timeline:
+        def __init__(self):
+            self.entries = []
+
+        # entry should be either a module, or one of the item types
+        def add_entry(self, entry):
+            self.entries.append(entry)
+
+    def __init__(self):
+        self.timeline = self.Timeline()
+
+    @classmethod
+    def _parse_timeline_item(cls, item):
+        content = item["itemContent"]
+        itemType = content["itemType"]
+
+        # regular tweet
+        if itemType == "TimelineTweet":
+            if "result" not in content["tweet_results"]:
+                # idk if all dead tweet look like this, or only ones that were deleted less recently (and hence fully deleted from their systems), but a tweet item with no results is effectively a tombstone item.
+                return cls.TombstoneItem()
+            if "tombstone" in content["tweet_results"]["result"]:
+                return cls.TombstoneItem()
+            return cls.TweetItem(content)
+
+        # dead tweet
+        if itemType == "TimelineTombstone":
+            return cls.TombstoneItem()
+
+        return None
+
+    @classmethod
+    def _parse_timeline_entry(cls, entry):
+        content = entry["content"]
+        entryType = content["entryType"]
+
+        # main item
+        if entryType == "TimelineTimelineItem":
+            return cls._parse_timeline_item(content)
+
+        # module (group of items)
+        if entryType == "TimelineTimelineModule":
+            module = cls.TimelineModule()
+
+            reply_items = content["items"]
+            for item in reply_items:
+                parsed_item = cls._parse_timeline_item(item["item"])
+                if parsed_item != None:
+                    module.add_item(parsed_item)
+
+            return module
+
+        return None
+
+    def _parse_instruction(self, instruction):
+        instrType = instruction["type"]
+
+        if instrType == "TimelineAddEntries":
+            for entry in instruction["entries"]:
+                parsed_entry = self._parse_timeline_entry(entry)
+                if parsed_entry != None:
+                    self.timeline.add_entry(parsed_entry)
+
+    def parse_tweet_details(self, tweet_details):
+        instructions = tweet_details["data"]["threaded_conversation_with_injections_v2"]["instructions"]
+        for instruction in instructions:
+            self._parse_instruction(instruction)
+
 class TwitterManager:
     def __init__(self):
         self.tm = Twitter(log_level=0)
@@ -104,63 +257,42 @@ class TwitterManager:
                     "response": Response.REMOVED
                 }
 
-            # parse root tweet
-            tweet_entities = tweet_details["data"]["threaded_conversation_with_injections"]["instructions"][0]["entries"]
-            if tweet_entities[0]["content"]["itemContent"]["itemType"] == "TimelineTombstone":
+            twitter_parser = TwitterParser()
+            twitter_parser.parse_tweet_details(tweet_details)
+            entries = twitter_parser.timeline.entries
+
+            response_type = Response.SUCCESS
+
+            # parse root item
+            root_item = entries[0]
+            if type(root_item) is TwitterParser.TombstoneItem:
                 return {
                     "response": Response.REMOVED
                 }
-            media_entities = []
-            for entry in tweet_entities:
-                if tweet_id in entry["entryId"]:
-                    if "tweet" in entry["content"]["itemContent"]["tweet_results"]["result"]:
-                        entry["content"]["itemContent"]["tweet_results"]["result"] = entry["content"]["itemContent"]["tweet_results"]["result"]["tweet"]
-                    if "extended_entities" in entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
-                        media_entities = entry["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"]
+            if type(root_item) is TwitterParser.TweetItem:
+                links.extend(root_item.media_links)
+                if root_item.incomplete:
+                    response_type = Response.INCOMPLETE
+
+            # parse self thread
+            for entry in entries[1:]:
+                if type(entry) is TwitterParser.TimelineModule:
+                    found_self_thread = False
+
+                    for item in entry.items:
+                        if type(item) is TwitterParser.TweetItem:
+                            if item.display_type == TwitterParser.TweetItem.DisplayType.SELF_THREAD:
+                                links.extend(item.media_links)
+                                if item.incomplete:
+                                    response_type = Response.INCOMPLETE
+
+                    if found_self_thread:
                         break
 
-            for entry in media_entities:
-                if entry["type"] == "photo":
-                    links.append(entry["media_url_https"] + "?format=png&name=4096x4096")
-                elif entry["type"] in ["video", "animated_gif"]:
-                    videos = entry["video_info"]["variants"]
-                    videos.sort(key=lambda x: x["bitrate"] if "bitrate" in x else 0)
-                    video_url = videos[-1]["url"]
-                    links.append(video_url)
-
-            # parse continued tweets
-            reply_entities = tweet_details["data"]["threaded_conversation_with_injections"]["instructions"][0]["entries"]
-            reply_thread = []
-            for entry in reply_entities:
-                if "conversationthread" in entry["entryId"]:
-                    if entry["content"]["items"][0]["item"]["itemContent"]["itemType"] != "TimelineTombstone":
-                        if "legacy" not in entry["content"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"]:
-                            entry["content"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"] = entry["content"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"]["tweet"]
-                        if entry["content"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"]["core"]["user_results"]["result"]["legacy"]["screen_name"].lower() == tweeter.lower():
-                            if entry["content"]["items"][0]["item"]["itemContent"]["tweet_results"]["result"]["legacy"]["in_reply_to_status_id_str"] == tweet_id:
-                                reply_thread = entry
-                                break
-            if reply_thread:
-                reply_thread = [tweet["item"]["itemContent"]["tweet_results"]["result"]["legacy"]["extended_entities"]["media"] for tweet in reply_thread["content"]["items"] if tweet["item"]["itemContent"]["itemType"] == "TimelineTweet" and "extended_entities" in tweet["item"]["itemContent"]["tweet_results"]["result"]["legacy"]]
-
-            response_type = Response.SUCCESS
-            for tweet in reply_thread:
-                for entry in tweet:
-                    if entry["type"] == "photo":
-                        links.append(entry["media_url_https"] + "?format=png&name=4096x4096")
-                    elif entry["type"] in ["video", "animated_gif"]:
-                        videos = entry["video_info"]["variants"]
-                        videos.sort(key=lambda x: x["bitrate"] if "bitrate" in x else 0)
-                        video_url = videos[-1]["url"]
-                        links.append(video_url)
-                    else:
-                        response_type = Response.INCOMPLETE
-                        continue
-
-            if not links and "quoted_status_permalink" in tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
-                if "extended_entities" not in tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]:
-                    new_url = tweet_entities[0]["content"]["itemContent"]["tweet_results"]["result"]["legacy"]["quoted_status_permalink"]["expanded"]
-                    return self.get_image_links(new_url)
+            if not links and type(root_item) is TwitterParser.TweetItem:
+                quote_url = root_item.quote_url
+                if quote_url != None:
+                    return self.get_image_links(quote_url)
 
             if not links:
                 return {
@@ -181,3 +313,6 @@ class TwitterManager:
 
     def set_cookie(self, cookie):
         self.tm.cookie = cookie
+
+    def set_user_agent(self, user_agent):
+        self.tm.user_agent = user_agent
