@@ -59,7 +59,7 @@ class RedditManager:
                     media = [html.unescape(media["source"]["url"])]
             elif "url" in valuable:
                 media = []
-                supported_exts = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp"]
+                supported_exts = ["png", "jpg", "jpeg", "mp4", "avif", "heic", "heif", "webm", "webp", "gif"]
                 extension = urlparse(valuable["url"]).path.split(".")[-1].lower()
                 if any(extension.startswith(current_ext) for current_ext in supported_exts):
                     media.append(valuable["url"])
